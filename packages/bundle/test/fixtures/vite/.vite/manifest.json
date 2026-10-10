@@ -1,0 +1,36 @@
+{
+  "_shared-BasdbAoA.js": {
+    "file": "assets/shared-BasdbAoA.js",
+    "name": "shared"
+  },
+  "about/index.html": {
+    "file": "assets/about-BjdwJIjE.js",
+    "name": "about",
+    "src": "about/index.html",
+    "isEntry": true,
+    "imports": [
+      "_shared-BasdbAoA.js"
+    ]
+  },
+  "index.html": {
+    "file": "assets/main-B09EfhTZ.js",
+    "name": "main",
+    "src": "index.html",
+    "isEntry": true,
+    "imports": [
+      "_shared-BasdbAoA.js"
+    ],
+    "dynamicImports": [
+      "src/heavy.js"
+    ],
+    "css": [
+      "assets/main-hwqwrAvA.css"
+    ]
+  },
+  "src/heavy.js": {
+    "file": "assets/heavy-lJhnBrO9.js",
+    "name": "heavy",
+    "src": "src/heavy.js",
+    "isDynamicEntry": true
+  }
+}

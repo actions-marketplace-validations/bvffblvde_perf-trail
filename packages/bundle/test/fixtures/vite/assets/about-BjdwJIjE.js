@@ -1,0 +1,1 @@
+import{t as e}from"./shared-BasdbAoA.js";e(`about `);
