@@ -106,6 +106,7 @@ describe("PerfHistoryTable", () => {
     expect(out.match(/<tr\b/g)).toHaveLength(4);
     expect(out.indexOf("feat: change 14")).toBeLessThan(out.indexOf("feat: change 13"));
     expect(out).toContain("Last 3 deploys of /, newest first");
+    expect(out).toContain('aria-label="Last 3 deploys of /, newest first" tabindex="0"');
   });
 });
 
@@ -184,5 +185,27 @@ describe("labels and interactivity", () => {
     const out = html(<PerfHistoryTable history={history} labels={uk} />);
     expect(out).toContain("Бюджети");
     expect(out).toContain('<td class="pt-poor">failed</td>');
+  });
+});
+
+describe("scale details", () => {
+  it("puts JS ticks on round KiB values", () => {
+    const history = series(4, () => 1400).map((e, i) => ({
+      ...e,
+      bundle: { routes: { "/": 141_000 + i * 2_000 } },
+    }));
+    const out = html(
+      <PerfHistoryChart history={history} metric="js" route="/" budget={160 * 1024} />,
+    );
+    const ticks = [...out.matchAll(/text-anchor="end">([\d.]+ KiB)</g)].map((m) => m[1]);
+    expect(ticks).toEqual(["0 KiB", "50 KiB", "100 KiB", "150 KiB", "200 KiB"]);
+  });
+
+  it("hides deltas that round to zero", () => {
+    const a = entry(0, 1400);
+    const b = entry(1, 1400);
+    (b.pages["/"] as Entry["pages"][string]).metrics.fcp = 802;
+    const out = html(<LatestDeployCard history={[a, b]} />);
+    expect(out).not.toContain("+0 s");
   });
 });

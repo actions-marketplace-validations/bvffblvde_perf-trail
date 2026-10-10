@@ -168,9 +168,10 @@ export function Delta({
   format: (v: number) => string;
   labels: PerfLabels;
 }) {
-  if (value === undefined || Math.abs(value) < 1e-9) return null;
-  const improved = better === "up" ? value > 0 : value < 0;
+  if (value === undefined) return null;
   const amount = format(Math.abs(value));
+  if (amount === format(0)) return null;
+  const improved = better === "up" ? value > 0 : value < 0;
   return (
     <span className={improved ? "pt-delta pt-improved" : "pt-delta pt-regressed"}>
       <span aria-hidden="true">{formatDelta(value, format)}</span>

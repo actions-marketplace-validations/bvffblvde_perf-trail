@@ -37,10 +37,11 @@ export function PerfHistoryTable({
     return <p className={`${classes} pt-empty`}>{labels.empty}</p>;
   }
   const { columns } = labels;
+  const title = caption ?? labels.tableCaption(rows.length, key);
   return (
-    <div className={classes}>
+    <section className={classes} aria-label={title} tabIndex={0}>
       <table>
-        <caption>{caption ?? labels.tableCaption(rows.length, key)}</caption>
+        <caption>{title}</caption>
         <thead>
           <tr>
             <th scope="col">{columns.commit}</th>
@@ -96,6 +97,6 @@ export function PerfHistoryTable({
           })}
         </tbody>
       </table>
-    </div>
+    </section>
   );
 }

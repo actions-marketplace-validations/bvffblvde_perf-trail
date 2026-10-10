@@ -6,9 +6,9 @@ import {
   domainFor,
   formatValue,
   higherIsBetter,
-  niceTicks,
   type Point,
   seriesFor,
+  ticksFor,
 } from "./series.ts";
 import { ChartTooltip, type TooltipPoint } from "./tooltip.tsx";
 
@@ -179,7 +179,7 @@ function Plot({
   labels: PerfLabels;
   markers: boolean;
 }) {
-  const ticks = niceTicks(low, high, 4).filter((t) => t >= low && t <= high);
+  const ticks = ticksFor(metric, low, high);
   const line = points.map((p, i) => `${i === 0 ? "M" : "L"}${x(i)} ${y(p.value)}`).join("");
   const baseline = y(low);
   const area = `${line}L${x(points.length - 1)} ${baseline}L${x(0)} ${baseline}Z`;

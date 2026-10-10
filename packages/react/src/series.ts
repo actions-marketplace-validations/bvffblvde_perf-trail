@@ -105,7 +105,19 @@ export function domainFor(
     const step = niceStep(100 - Math.min(low, 95), 4);
     return [Math.max(0, Math.floor((Math.min(low, 95) - step / 2) / step) * step), 100];
   }
-  const high = Math.max(...all, metric === "cls" ? 0.01 : 1) * 1.15;
+  const unit = scaleUnit(metric);
+  const high = (Math.max(...all, metric === "cls" ? 0.01 : 1) * 1.15) / unit;
   const step = niceStep(high, 4);
-  return [0, Number((Math.ceil(high / step) * step).toFixed(10))];
+  return [0, Number((Math.ceil(high / step) * step).toFixed(10)) * unit];
+}
+
+export function ticksFor(metric: ChartMetric, low: number, high: number): number[] {
+  const unit = scaleUnit(metric);
+  return niceTicks(low / unit, high / unit, 4)
+    .map((tick) => tick * unit)
+    .filter((tick) => tick >= low - 1e-9 && tick <= high + 1e-9);
+}
+
+function scaleUnit(metric: ChartMetric): number {
+  return metric === "js" ? 1024 : 1;
 }
