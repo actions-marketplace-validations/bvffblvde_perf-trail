@@ -41,6 +41,13 @@ const inputs: [string, string, string][] = [
   ],
   ["revalidate-url", "none", "URL to POST after the history is saved."],
   ["revalidate-secret", "none", "Sent to revalidate-url as Authorization: Bearer <secret>."],
+  [
+    "preview-comment",
+    "false",
+    "Comment on pull requests for preview deployments. Needs pull-requests: write.",
+  ],
+  ["preview-environment-prefix", "Preview", "Deployment environments treated as previews."],
+  ["extra-headers", "none", "JSON object of headers Lighthouse sends, masked in logs."],
   ["github-token", "github.token", "Needs contents: write."],
 ];
 
@@ -71,7 +78,7 @@ jobs:
         with:
           node-version: 24
       - run: npm ci
-      - uses: bvffblvde/perf-trail@main
+      - uses: bvffblvde/perf-trail@v1
         with:
           urls: |
             https://your-site.com/
@@ -96,9 +103,22 @@ jobs:
     needs: deploy
     runs-on: ubuntu-latest
     steps:
-      - uses: bvffblvde/perf-trail@main
+      - uses: bvffblvde/perf-trail@v1
         with:
           urls: https://you.github.io/your-site/`;
+
+const previewWorkflow = `permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  perf:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: bvffblvde/perf-trail@v1
+        with:
+          urls: https://your-site.com/
+          preview-comment: true
+          extra-headers: '{"x-vercel-protection-bypass": "\${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}"}'`;
 
 const privateRead = `const history = await fetchHistory({
   repo: "you/private-site",
@@ -261,6 +281,14 @@ export default function Docs() {
       <h3>GitHub Pages and other hosts</h3>
       <p>Run perf-trail after your deploy job on push.</p>
       <Code code={pagesWorkflow} label=".github/workflows/pages.yml" language="yaml" />
+      <h3>Pull request previews</h3>
+      <p>
+        Turn on preview-comment and the same workflow measures successful preview deployments, finds
+        the pull request that contains the commit, and keeps one comment on it up to date, compared
+        with the latest production entry. Previews never write to the history. Vercel previews need
+        a Protection Bypass for Automation secret, sent as a header.
+      </p>
+      <Code code={previewWorkflow} label="preview comments" language="yaml" />
       <h3>Private repositories</h3>
       <p>
         Pass a fine-grained token with read access to contents. The client then reads through the

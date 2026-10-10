@@ -2,7 +2,7 @@
 
 Performance history for every deploy. A GitHub Action audits your production site with Lighthouse after each deploy and appends the result to a JSON file in a git branch. No server, no database, no paid service.
 
-Status: early development (phase 3 of 4). The action, the history format, the client and the React components work; npm packages and the Marketplace listing are next. Live demo and docs: https://perf-trail.vercel.app
+Status: 1.0. Use the action as `bvffblvde/perf-trail@v1`; the packages are on npm under `@perf-trail`. Live demo and docs: https://perf-trail.vercel.app
 
 ## Usage
 
@@ -16,7 +16,7 @@ jobs:
   perf:
     runs-on: ubuntu-latest
     steps:
-      - uses: bvffblvde/perf-trail@main
+      - uses: bvffblvde/perf-trail@v1
         with:
           urls: |
             https://example.com/
@@ -37,7 +37,7 @@ To record gzip JS per route, check out the deployed commit, install dependencies
         with:
           node-version: 24
       - run: npm ci
-      - uses: bvffblvde/perf-trail@main
+      - uses: bvffblvde/perf-trail@v1
         with:
           urls: https://example.com/
           build-command: npm run build
@@ -61,6 +61,23 @@ To record gzip JS per route, check out the deployed commit, install dependencies
 
 Every run writes a table with deltas to the job summary.
 
+## Pull request previews
+
+With `preview-comment: true` the action also measures successful preview deployments, finds the pull request that contains the commit, and keeps one comment on it up to date with the scores, metrics, bundle sizes and budgets compared with the latest production entry. Previews never write to the history.
+
+```yaml
+permissions:
+  contents: write
+  pull-requests: write
+```
+
+Vercel previews sit behind Deployment Protection by default. Create a Protection Bypass for Automation secret in the Vercel project and pass it as a header:
+
+```yaml
+          preview-comment: true
+          extra-headers: '{"x-vercel-protection-bypass": "${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}"}'
+```
+
 ## Badges
 
 Each run writes SVG badges to `badges/` in the data branch: `performance.svg` and `lcp.svg` for the first URL, `js.svg` for the largest route, and `pages/<page>/` for every page. Desktop runs use `badges/desktop/`.
@@ -70,6 +87,10 @@ Each run writes SVG badges to `badges/` in the data branch: `performance.svg` an
 ```
 
 ## Render the history
+
+```sh
+npm install @perf-trail/client @perf-trail/react
+```
 
 ```tsx
 import { fetchHistory } from "@perf-trail/client";
@@ -109,6 +130,9 @@ The components render pure SVG on the server with no client JavaScript, take `ro
 | `budgets` | none | path to `perf-trail.budgets.json` |
 | `bundle-chunks` | none | JSON file of extra named gzip sizes in bytes, written by your build-command, merged into `bundle.chunks` |
 | `fail-on-budget` | `true` | fail the job on a broken budget, the entry is saved first |
+| `preview-comment` | `false` | comment on pull requests for preview deployments |
+| `preview-environment-prefix` | `Preview` | which environments count as previews |
+| `extra-headers` | none | JSON object of headers Lighthouse sends, values are masked in logs |
 | `github-token` | `github.token` | needs `contents: write` |
 
 ## History format

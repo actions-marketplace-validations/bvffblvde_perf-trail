@@ -24,9 +24,11 @@ jobs:
   perf:
     runs-on: ubuntu-latest
     steps:
-      - uses: bvffblvde/perf-trail@main
+      - uses: bvffblvde/perf-trail@v1
         with:
           urls: https://your-site.com/`;
+
+const install = "npm install @perf-trail/client @perf-trail/react";
 
 const reactUsage = `import { fetchHistory } from "@perf-trail/client";
 import { LatestDeployCard, PerfHistoryChart } from "@perf-trail/react";
@@ -234,6 +236,7 @@ export default async function Home() {
                 Server components, pure SVG, themed with CSS variables. Works in light and dark.
               </p>
             </div>
+            <Code code={install} label="terminal" language="sh" />
             <Code code={reactUsage} label="app/perf/page.tsx" language="tsx" />
           </li>
           <li className="snippet">
