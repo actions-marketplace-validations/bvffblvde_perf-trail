@@ -74,9 +74,11 @@ export async function measurePage(
   return { result: pickMedianRun(results), runs: results };
 }
 
+export type LighthouseOptions = { headers?: Record<string, string>; skipAudits?: string[] };
+
 export async function installLighthouse(
   dir: string,
-  headers: Record<string, string> = {},
+  { headers = {}, skipAudits = [] }: LighthouseOptions = {},
 ): Promise<RunLighthouse> {
   await exec(
     "npm",
@@ -106,6 +108,7 @@ export async function installLighthouse(
         "--quiet",
         ...(preset === "desktop" ? ["--preset=desktop"] : []),
         ...(Object.keys(headers).length > 0 ? [`--extra-headers=${JSON.stringify(headers)}`] : []),
+        ...(skipAudits.length > 0 ? [`--skip-audits=${skipAudits.join(",")}`] : []),
       ],
       { silent: true },
     );

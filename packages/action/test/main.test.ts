@@ -17,6 +17,7 @@ const state = vi.hoisted(() => ({
   summary: "",
   head: undefined as string | undefined,
   builds: [] as string[],
+  lighthouseOptions: undefined as unknown,
 }));
 
 vi.mock("@actions/core", () => ({
@@ -58,9 +59,12 @@ vi.mock("../src/lighthouse.ts", async (importOriginal) => {
   const original = await importOriginal<typeof import("../src/lighthouse.ts")>();
   return {
     ...original,
-    installLighthouse: async () => async (url: URL) => {
-      state.audited.push(url.href);
-      return fixture;
+    installLighthouse: async (_dir: string, options: unknown) => {
+      state.lighthouseOptions = options;
+      return async (url: URL) => {
+        state.audited.push(url.href);
+        return fixture;
+      };
     },
   };
 });
@@ -132,6 +136,7 @@ describe("run", () => {
     ]);
     expect(state.outputs.skipped).toBe("false");
     expect(JSON.parse(state.outputs["entry-json"] ?? "{}").sha).toBe(SHA);
+    expect(state.lighthouseOptions).toMatchObject({ skipAudits: [] });
   });
 
   it("omits the commit message when asked", async () => {
@@ -306,6 +311,8 @@ describe("preview comments", () => {
     expect(comment).toContain("### perf-trail preview: abcdef1 (mobile)");
     expect(comment).toContain("Measured on https://site-git-feature.vercel.app");
     expect(comment).toContain("No production entry yet");
+    expect(comment).toContain("SEO skips the crawlability check");
+    expect(state.lighthouseOptions).toMatchObject({ skipAudits: ["is-crawlable"] });
   });
 
   it("updates the same comment and compares with production", async () => {

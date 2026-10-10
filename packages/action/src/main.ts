@@ -24,6 +24,8 @@ import { readLatest, saveEntry } from "./store.ts";
 import { PREVIEW_HEADING, summaryMarkdown } from "./summary.ts";
 import { auditUrls, resolveTarget, type Target } from "./target.ts";
 
+const PREVIEW_SKIPPED_AUDITS = ["is-crawlable"];
+
 export async function run(): Promise<void> {
   try {
     const inputs = readInputs((name) => core.getInput(name));
@@ -71,7 +73,7 @@ export async function run(): Promise<void> {
       : undefined;
     const bundle = await measureBuild(inputs, cwd, target.sha);
     const urls = auditUrls(inputs.urls, target.deploymentUrl, preview || inputs.useDeploymentUrl);
-    const entry = await measureEntry(inputs, api, target.sha, urls, bundle, budgets);
+    const entry = await measureEntry(inputs, api, target.sha, urls, bundle, budgets, preview);
 
     if (target.kind === "preview") {
       const baseline = await readLatest(api, inputs.dataBranch, inputs.preset);
@@ -121,11 +123,12 @@ async function measureEntry(
   urls: URL[],
   bundle: Bundle | undefined,
   budgets: Budgets | undefined,
+  preview: boolean,
 ): Promise<Entry> {
   const commit = await api.getCommit(sha);
   const runLighthouse = await installLighthouse(
     resolve(process.env.RUNNER_TEMP || tmpdir(), "perf-trail-lighthouse"),
-    inputs.extraHeaders,
+    { headers: inputs.extraHeaders, skipAudits: preview ? PREVIEW_SKIPPED_AUDITS : [] },
   );
   const pages: Record<string, PageResult> = {};
   for (const url of urls) {

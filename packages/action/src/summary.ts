@@ -35,7 +35,14 @@ export function summaryMarkdown(
     ? `${PREVIEW_HEADING}: ${entry.sha.slice(0, 7)} (${entry.preset})`
     : `### perf-trail: ${entry.sha.slice(0, 7)} (${entry.preset})`;
   const lines = [title, ""];
-  if (options.preview) lines.push(`Measured on ${options.preview.url}`, "");
+  if (options.preview) {
+    lines.push(
+      `Measured on ${options.preview.url}`,
+      "",
+      "SEO skips the crawlability check here: preview deployments are usually served with noindex.",
+      "",
+    );
+  }
   if (entry.message) lines.push(`> ${entry.message}`, "");
   lines.push(...pagesTable(entry, previous), "");
   if (entry.bundle) lines.push(...bundleTable(entry, previous), "");
