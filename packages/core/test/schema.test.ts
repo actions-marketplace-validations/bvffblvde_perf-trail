@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { entrySchema, historyJsonSchema } from "../src/index.ts";
+import { budgetsJsonSchema, entrySchema, historyJsonSchema } from "../src/index.ts";
 import { entry } from "./fixtures.ts";
 
 describe("entrySchema", () => {
@@ -40,9 +40,12 @@ describe("entrySchema", () => {
   });
 });
 
-describe("history.v1.json", () => {
-  it("is up to date with the Zod schema", () => {
-    const file = new URL("../schema/history.v1.json", import.meta.url);
-    expect(JSON.parse(readFileSync(file, "utf8"))).toEqual(historyJsonSchema());
+describe("published JSON Schemas", () => {
+  it.each([
+    ["history.v1.json", historyJsonSchema],
+    ["budgets.v1.json", budgetsJsonSchema],
+  ])("%s is up to date with the Zod schema", (name, build) => {
+    const file = new URL(`../schema/${name}`, import.meta.url);
+    expect(JSON.parse(readFileSync(file, "utf8"))).toEqual(build());
   });
 });

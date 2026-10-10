@@ -1,0 +1,155 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "scores": {
+      "description": "Minimum Lighthouse scores, 0 to 100",
+      "type": "object",
+      "properties": {
+        "performance": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "accessibility": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "bestPractices": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "seo": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        }
+      },
+      "additionalProperties": false
+    },
+    "metrics": {
+      "description": "Maximum metric values: milliseconds, CLS is unitless",
+      "type": "object",
+      "properties": {
+        "lcp": {
+          "type": "number",
+          "minimum": 0
+        },
+        "cls": {
+          "type": "number",
+          "minimum": 0
+        },
+        "tbt": {
+          "type": "number",
+          "minimum": 0
+        },
+        "fcp": {
+          "type": "number",
+          "minimum": 0
+        },
+        "si": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "$schema": {
+      "type": "string"
+    },
+    "pages": {
+      "description": "Overrides for single pages, keyed by path such as /en",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "scores": {
+            "description": "Minimum Lighthouse scores, 0 to 100",
+            "type": "object",
+            "properties": {
+              "performance": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "accessibility": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "bestPractices": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "seo": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100
+              }
+            },
+            "additionalProperties": false
+          },
+          "metrics": {
+            "description": "Maximum metric values: milliseconds, CLS is unitless",
+            "type": "object",
+            "properties": {
+              "lcp": {
+                "type": "number",
+                "minimum": 0
+              },
+              "cls": {
+                "type": "number",
+                "minimum": 0
+              },
+              "tbt": {
+                "type": "number",
+                "minimum": 0
+              },
+              "fcp": {
+                "type": "number",
+                "minimum": 0
+              },
+              "si": {
+                "type": "number",
+                "minimum": 0
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "bundle": {
+      "type": "object",
+      "properties": {
+        "maxKiB": {
+          "description": "Maximum gzip JS per route in KiB",
+          "type": "number",
+          "minimum": 0
+        },
+        "routes": {
+          "description": "Overrides in KiB keyed by route such as /[locale]",
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "number",
+            "minimum": 0
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "$id": "https://raw.githubusercontent.com/bvffblvde/perf-trail/main/packages/core/schema/budgets.v1.json",
+  "title": "perf-trail budgets v1"
+}

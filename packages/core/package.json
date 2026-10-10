@@ -12,7 +12,8 @@
   "sideEffects": false,
   "exports": {
     ".": "./src/index.ts",
-    "./schema.json": "./schema/history.v1.json"
+    "./schema.json": "./schema/history.v1.json",
+    "./budgets.schema.json": "./schema/budgets.v1.json"
   },
   "publishConfig": {
     "exports": {
@@ -20,7 +21,8 @@
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
       },
-      "./schema.json": "./schema/history.v1.json"
+      "./schema.json": "./schema/history.v1.json",
+      "./budgets.schema.json": "./schema/budgets.v1.json"
     }
   },
   "files": [
