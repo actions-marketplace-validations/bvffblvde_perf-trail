@@ -22,16 +22,30 @@ const METRIC_COLUMNS: [keyof Metrics, string][] = [
   ["fcp", "FCP"],
 ];
 
-export function summaryMarkdown(entry: Entry, previous: Entry | undefined): string {
-  const lines = [`### perf-trail: ${entry.sha.slice(0, 7)} (${entry.preset})`, ""];
+export const PREVIEW_HEADING = "### perf-trail preview";
+
+export type SummaryOptions = { preview?: { url: string } };
+
+export function summaryMarkdown(
+  entry: Entry,
+  previous: Entry | undefined,
+  options: SummaryOptions = {},
+): string {
+  const title = options.preview
+    ? `${PREVIEW_HEADING}: ${entry.sha.slice(0, 7)} (${entry.preset})`
+    : `### perf-trail: ${entry.sha.slice(0, 7)} (${entry.preset})`;
+  const lines = [title, ""];
+  if (options.preview) lines.push(`Measured on ${options.preview.url}`, "");
   if (entry.message) lines.push(`> ${entry.message}`, "");
   lines.push(...pagesTable(entry, previous), "");
   if (entry.bundle) lines.push(...bundleTable(entry, previous), "");
   if (entry.budgets) lines.push(...budgetLines(entry.budgets), "");
   lines.push(
     previous
-      ? `Deltas compare with ${previous.sha.slice(0, 7)} from ${previous.date.slice(0, 10)}.`
-      : "First entry: nothing to compare with yet.",
+      ? `Deltas compare with ${options.preview ? "production " : ""}${previous.sha.slice(0, 7)} from ${previous.date.slice(0, 10)}.`
+      : options.preview
+        ? "No production entry yet: nothing to compare with."
+        : "First entry: nothing to compare with yet.",
   );
   return `${lines.join("\n")}\n`;
 }

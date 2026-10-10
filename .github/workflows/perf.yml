@@ -6,9 +6,10 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 concurrency:
-  group: perf-trail
+  group: perf-trail-${{ github.event.deployment.environment || github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -40,3 +41,5 @@ jobs:
           budgets: examples/next-app/perf-trail.budgets.json
           revalidate-url: ${{ vars.EXAMPLE_SITE_URL }}/api/revalidate
           revalidate-secret: ${{ secrets.REVALIDATE_SECRET }}
+          preview-comment: true
+          extra-headers: '{"x-vercel-protection-bypass": "${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}"}'

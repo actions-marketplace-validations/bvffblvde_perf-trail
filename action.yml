@@ -53,6 +53,15 @@ inputs:
   fail-on-budget:
     description: Fail the job when a budget is broken (the entry is saved first)
     default: "true"
+  preview-comment:
+    description: Measure successful preview deployments and post a comparison with production on the pull request (needs pull-requests write)
+    default: "false"
+  preview-environment-prefix:
+    description: Deployment environments treated as previews when preview-comment is on
+    default: Preview
+  extra-headers:
+    description: JSON object of HTTP headers Lighthouse sends, for example a deployment protection bypass
+    required: false
   github-token:
     description: Token with contents write access
     default: ${{ github.token }}

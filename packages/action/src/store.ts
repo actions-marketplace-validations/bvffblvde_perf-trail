@@ -59,3 +59,13 @@ async function readHistory(api: GitHubApi, ref: string, branch: string): Promise
 function message(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
+
+export async function readLatest(
+  api: GitHubApi,
+  branch: string,
+  preset: Entry["preset"],
+): Promise<Entry | undefined> {
+  const head = await api.getBranchHead(branch);
+  if (!head) return undefined;
+  return latest(await readHistory(api, head, branch), preset);
+}

@@ -19,6 +19,9 @@ export type Inputs = {
   budgetsPath?: string;
   bundleChunks?: string;
   failOnBudget: boolean;
+  previewComment: boolean;
+  previewEnvironmentPrefix: string;
+  extraHeaders: Record<string, string>;
 };
 
 export type GetInput = (name: string) => string;
@@ -48,6 +51,9 @@ export function readInputs(get: GetInput): Inputs {
     ...(budgetsPath ? { budgetsPath } : {}),
     ...(bundleChunks ? { bundleChunks } : {}),
     failOnBudget: boolean(get, "fail-on-budget", true),
+    previewComment: boolean(get, "preview-comment", false),
+    previewEnvironmentPrefix: optional(get("preview-environment-prefix")) ?? "Preview",
+    extraHeaders: headers(get("extra-headers")),
   };
 }
 
@@ -128,4 +134,23 @@ function bundleSpec(value: string): BundleSpec | null {
   } catch (error) {
     throw new Error(`Input ${error instanceof Error ? error.message : String(error)}`);
   }
+}
+
+function headers(raw: string): Record<string, string> {
+  const value = raw.trim();
+  if (!value) return {};
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(value);
+  } catch {
+    throw new Error("Input extra-headers must be a JSON object of header names to values");
+  }
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+    throw new Error("Input extra-headers must be a JSON object of header names to values");
+  }
+  const entries = Object.entries(parsed);
+  if (entries.some(([, v]) => typeof v !== "string")) {
+    throw new Error("Input extra-headers values must be strings");
+  }
+  return Object.fromEntries(entries) as Record<string, string>;
 }

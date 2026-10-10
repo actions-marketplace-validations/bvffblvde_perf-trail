@@ -273,3 +273,74 @@ describe("bundle-chunks", () => {
     expect(state.failed).toContain("must map names to gzip byte counts");
   });
 });
+
+describe("preview comments", () => {
+  const previewEvent = () =>
+    Object.assign(state.context, {
+      eventName: "deployment_status",
+      payload: {
+        deployment_status: {
+          state: "success",
+          environment_url: "https://site-git-feature.vercel.app",
+        },
+        deployment: { sha: SHA, environment: "Preview" },
+      },
+    });
+
+  it("skips previews unless preview-comment is on", async () => {
+    previewEvent();
+    await run();
+    expect(state.outputs.skipped).toBe("true");
+    expect(state.audited).toEqual([]);
+  });
+
+  it("measures the preview URL, comments on the PR and leaves history alone", async () => {
+    previewEvent();
+    state.inputs["preview-comment"] = "true";
+    gh.current?.pulls.set(SHA, 42);
+    await run();
+    expect(state.failed).toBeUndefined();
+    expect(state.audited[0]).toBe("https://site-git-feature.vercel.app/en");
+    expect(gh.current?.commits).toEqual([]);
+    const [comment] = gh.current?.comments.get(42) ?? [];
+    expect(comment).toContain("### perf-trail preview: abcdef1 (mobile)");
+    expect(comment).toContain("Measured on https://site-git-feature.vercel.app");
+    expect(comment).toContain("No production entry yet");
+  });
+
+  it("updates the same comment and compares with production", async () => {
+    const production = {
+      v: 1,
+      sha: "1111111aaaa",
+      date: "2026-09-30T00:00:00.000Z",
+      url: "https://example.com",
+      preset: "mobile",
+      pages: {
+        "/en": {
+          scores: { performance: 90, accessibility: 96, bestPractices: 100, seo: 80 },
+          metrics: { lcp: 1200, cls: 0, tbt: 300, fcp: 779, si: 779 },
+        },
+      },
+    };
+    gh.current = fakeGitHub({
+      "perf-data": { head: "h1", files: { "history.json": JSON.stringify([production]) } },
+    });
+    previewEvent();
+    state.inputs["preview-comment"] = "true";
+    gh.current.pulls.set(SHA, 7);
+    await run();
+    await run();
+    const list = gh.current.comments.get(7) ?? [];
+    expect(list).toHaveLength(1);
+    expect(list[0]).toContain("| `/en` | 93 (+3)");
+    expect(list[0]).toContain("Deltas compare with production 1111111");
+  });
+
+  it("skips when no pull request contains the commit", async () => {
+    previewEvent();
+    state.inputs["preview-comment"] = "true";
+    await run();
+    expect(state.logs.join("\n")).toContain("no pull request contains abcdef1");
+    expect(state.audited).toEqual([]);
+  });
+});

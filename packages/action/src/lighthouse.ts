@@ -74,7 +74,10 @@ export async function measurePage(
   return { result: pickMedianRun(results), runs: results };
 }
 
-export async function installLighthouse(dir: string): Promise<RunLighthouse> {
+export async function installLighthouse(
+  dir: string,
+  headers: Record<string, string> = {},
+): Promise<RunLighthouse> {
   await exec(
     "npm",
     [
@@ -102,6 +105,7 @@ export async function installLighthouse(dir: string): Promise<RunLighthouse> {
         "--chrome-flags=--headless=new --no-sandbox",
         "--quiet",
         ...(preset === "desktop" ? ["--preset=desktop"] : []),
+        ...(Object.keys(headers).length > 0 ? [`--extra-headers=${JSON.stringify(headers)}`] : []),
       ],
       { silent: true },
     );

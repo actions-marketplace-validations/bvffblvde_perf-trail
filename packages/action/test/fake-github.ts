@@ -11,6 +11,8 @@ export function fakeGitHub(initial: Record<string, FakeBranch> = {}) {
     message: string;
   }[] = [];
   let conflicts = 0;
+  const pulls = new Map<string, number>();
+  const comments = new Map<number, string[]>();
   const api: GitHubApi = {
     async getCommit(sha) {
       return {
@@ -38,11 +40,24 @@ export function fakeGitHub(initial: Record<string, FakeBranch> = {}) {
       });
       return "ok";
     },
+    async findPullRequest(sha) {
+      return pulls.get(sha);
+    },
+    async upsertComment(issue, heading, body) {
+      const list = comments.get(issue) ?? [];
+      const index = list.findIndex((c) => c.startsWith(heading));
+      if (index >= 0) list[index] = body;
+      else list.push(body);
+      comments.set(issue, list);
+      return index >= 0 ? "updated" : "created";
+    },
   };
   return {
     api,
     branches,
     commits,
+    pulls,
+    comments,
     failNextCommits(count: number) {
       conflicts = count;
     },

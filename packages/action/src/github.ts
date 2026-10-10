@@ -16,6 +16,8 @@ export interface GitHubApi {
     files: Record<string, string>;
     message: string;
   }): Promise<CommitFilesResult>;
+  findPullRequest(sha: string): Promise<number | undefined>;
+  upsertComment(issue: number, heading: string, body: string): Promise<"created" | "updated">;
 }
 
 export function createGitHubApi(token: string, repo: Repo): GitHubApi {
@@ -49,6 +51,30 @@ export function createGitHubApi(token: string, repo: Repo): GitHubApi {
         if (status(error) === 404) return null;
         throw error;
       }
+    },
+    async findPullRequest(sha) {
+      const { data } = await rest.repos.listPullRequestsAssociatedWithCommit({
+        ...repo,
+        commit_sha: sha,
+      });
+      const open = data.filter((pr) => pr.state === "open");
+      return (open[0] ?? data[0])?.number;
+    },
+    async upsertComment(issue, heading, body) {
+      const { data } = await rest.issues.listComments({
+        ...repo,
+        issue_number: issue,
+        per_page: 100,
+      });
+      const mine = data.find(
+        (comment) => comment.user?.type === "Bot" && comment.body?.startsWith(heading),
+      );
+      if (mine) {
+        await rest.issues.updateComment({ ...repo, comment_id: mine.id, body });
+        return "updated";
+      }
+      await rest.issues.createComment({ ...repo, issue_number: issue, body });
+      return "created";
     },
     async commitFiles({ branch, parent, files, message }) {
       const baseTree = parent

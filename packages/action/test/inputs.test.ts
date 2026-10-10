@@ -70,3 +70,26 @@ describe("pageKey", () => {
     expect(pageKey(new URL(url))).toBe(key);
   });
 });
+
+describe("preview and header inputs", () => {
+  it("defaults to no preview comments and no headers", () => {
+    expect(readInputs(inputs({ urls: "https://a.com" }))).toMatchObject({
+      previewComment: false,
+      previewEnvironmentPrefix: "Preview",
+      extraHeaders: {},
+    });
+  });
+
+  it("parses extra headers", () => {
+    const result = readInputs(
+      inputs({ urls: "https://a.com", "extra-headers": '{"x-vercel-protection-bypass":"s"}' }),
+    );
+    expect(result.extraHeaders).toEqual({ "x-vercel-protection-bypass": "s" });
+  });
+
+  it.each(['["a"]', "{bad", '{"a":1}'])("rejects extra headers %s", (value) => {
+    expect(() => readInputs(inputs({ urls: "https://a.com", "extra-headers": value }))).toThrow(
+      "extra-headers",
+    );
+  });
+});
