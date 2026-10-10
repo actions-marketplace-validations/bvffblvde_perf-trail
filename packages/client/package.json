@@ -1,0 +1,35 @@
+{
+  "name": "@perf-trail/client",
+  "version": "0.0.0",
+  "description": "Read perf-trail history from a git branch",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bvffblvde/perf-trail.git",
+    "directory": "packages/client"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@perf-trail/core": "workspace:*"
+  }
+}

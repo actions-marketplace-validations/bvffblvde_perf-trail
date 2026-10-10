@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { formatBytes, formatDelta, formatMetric, formatSeconds } from "../src/index.ts";
+import {
+  formatBytes,
+  formatDelta,
+  formatMetric,
+  formatSeconds,
+  rateMetric,
+  rateScore,
+} from "../src/index.ts";
 
 describe("format", () => {
   it("formats metrics", () => {
@@ -23,5 +30,17 @@ describe("format", () => {
     expect(formatDelta(-200, (v) => `${v} ms`)).toBe("-200 ms");
     expect(formatDelta(3, String)).toBe("+3");
     expect(formatDelta(0, String)).toBe("0");
+  });
+});
+
+describe("rating", () => {
+  it("rates scores like Lighthouse", () => {
+    expect([90, 89, 50, 49].map(rateScore)).toEqual(["good", "average", "average", "poor"]);
+  });
+
+  it("rates metrics by Core Web Vitals thresholds", () => {
+    expect(rateMetric("lcp", 2500)).toBe("good");
+    expect(rateMetric("lcp", 4000)).toBe("average");
+    expect(rateMetric("cls", 0.26)).toBe("poor");
   });
 });

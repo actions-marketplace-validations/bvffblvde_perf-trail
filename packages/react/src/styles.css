@@ -1,0 +1,239 @@
+:where(.pt-chart, .pt-card, .pt-table) {
+  --pt-fg: currentColor;
+  --pt-muted: color-mix(in srgb, currentColor 60%, transparent);
+  --pt-grid: color-mix(in srgb, currentColor 12%, transparent);
+  --pt-line: light-dark(#2443b8, #8ea6ff);
+  --pt-area: color-mix(in srgb, var(--pt-line) 12%, transparent);
+  --pt-budget: light-dark(#a35f00, #f0a53a);
+  --pt-good: light-dark(#0c7a43, #4cc38a);
+  --pt-average: light-dark(#a35f00, #f0a53a);
+  --pt-poor: light-dark(#c8322a, #ff7a6e);
+  --pt-surface: transparent;
+  --pt-radius: 10px;
+}
+
+.pt-chart {
+  margin: 0;
+}
+
+.pt-chart svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  font: inherit;
+}
+
+.pt-chart figcaption {
+  margin-top: 0.5em;
+  color: var(--pt-muted);
+  font-size: 0.875em;
+}
+
+.pt-chart text {
+  fill: var(--pt-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.pt-grid line {
+  stroke: var(--pt-grid);
+}
+
+.pt-line {
+  fill: none;
+  stroke: var(--pt-line);
+  stroke-width: 2.25;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.pt-area {
+  fill: var(--pt-area);
+}
+
+.pt-budget line {
+  stroke: var(--pt-budget);
+  stroke-dasharray: 5 4;
+}
+
+.pt-chart .pt-budget text {
+  fill: var(--pt-budget);
+}
+
+.pt-point {
+  fill: Canvas;
+  stroke: var(--pt-line);
+  stroke-width: 2;
+}
+
+.pt-last {
+  fill: var(--pt-line);
+}
+
+.pt-breach {
+  fill: var(--pt-poor);
+  stroke: var(--pt-poor);
+}
+
+.pt-card {
+  display: grid;
+  gap: 1rem;
+  padding: 1.25rem;
+  border: 1px solid var(--pt-grid);
+  border-radius: var(--pt-radius);
+  background: var(--pt-surface);
+}
+
+.pt-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.75rem;
+}
+
+.pt-card-head time {
+  color: var(--pt-muted);
+}
+
+.pt-message {
+  margin: 0;
+  flex-basis: 100%;
+}
+
+.pt-scores,
+.pt-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+  gap: 0.75rem 1rem;
+  margin: 0;
+}
+
+.pt-scores dt,
+.pt-metrics dt {
+  color: var(--pt-muted);
+  font-size: 0.875em;
+}
+
+.pt-scores dd,
+.pt-metrics {
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+}
+
+.pt-metrics dd {
+  white-space: nowrap;
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.pt-scores dd {
+  font-size: 1.75em;
+  font-weight: 650;
+  line-height: 1.2;
+}
+
+.pt-metrics dd {
+  font-size: 1.125em;
+  font-weight: 600;
+}
+
+.pt-score.pt-good dd,
+.pt-metric.pt-good dd {
+  color: var(--pt-good);
+}
+
+.pt-score.pt-average dd,
+.pt-metric.pt-average dd {
+  color: var(--pt-average);
+}
+
+.pt-score.pt-poor dd,
+.pt-metric.pt-poor dd {
+  color: var(--pt-poor);
+}
+
+.pt-delta {
+  white-space: nowrap;
+  margin-left: 0.4em;
+  font-size: 0.6em;
+  font-weight: 500;
+}
+
+.pt-metrics .pt-delta {
+  font-size: 0.75em;
+}
+
+.pt-improved {
+  color: var(--pt-good);
+}
+
+.pt-regressed {
+  color: var(--pt-poor);
+}
+
+.pt-budgets {
+  margin: 0;
+  font-weight: 600;
+}
+
+.pt-budgets.pt-good {
+  color: var(--pt-good);
+}
+
+.pt-budgets.pt-poor {
+  color: var(--pt-poor);
+}
+
+.pt-empty {
+  color: var(--pt-muted);
+}
+
+.pt-table {
+  overflow-x: auto;
+}
+
+.pt-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.pt-table caption {
+  text-align: start;
+  color: var(--pt-muted);
+  padding-bottom: 0.5em;
+}
+
+.pt-table th,
+.pt-table td {
+  padding: 0.5em 0.75em 0.5em 0;
+  border-bottom: 1px solid var(--pt-grid);
+  text-align: start;
+  white-space: nowrap;
+}
+
+.pt-table thead th {
+  color: var(--pt-muted);
+  font-weight: 500;
+}
+
+.pt-table .pt-message {
+  white-space: normal;
+  min-width: 14rem;
+}
+
+.pt-table td.pt-good {
+  color: var(--pt-good);
+}
+
+.pt-table td.pt-average {
+  color: var(--pt-average);
+}
+
+.pt-table td.pt-poor {
+  color: var(--pt-poor);
+}
+
+.pt-commit code {
+  font-size: 0.9em;
+}

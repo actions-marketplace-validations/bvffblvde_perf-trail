@@ -1,16 +1,23 @@
-import { type Budgets, type Entry, formatBytes, formatSeconds } from "@perf-trail/core";
+import {
+  type Budgets,
+  type Entry,
+  formatBytes,
+  formatSeconds,
+  rateMetric,
+  rateScore,
+} from "@perf-trail/core";
 import { colors, renderBadge } from "./badge.ts";
 
 export { type BadgeOptions, colors, renderBadge } from "./badge.ts";
 export { textWidth } from "./width.ts";
 
 export function scoreBadge(score: number, label = "Lighthouse"): string {
-  const color = score >= 90 ? colors.good : score >= 50 ? colors.average : colors.poor;
+  const color = colors[rateScore(score)];
   return renderBadge({ label, message: String(score), color });
 }
 
 export function lcpBadge(ms: number, label = "LCP"): string {
-  const color = ms <= 2500 ? colors.good : ms <= 4000 ? colors.average : colors.poor;
+  const color = colors[rateMetric("lcp", ms)];
   return renderBadge({ label, message: formatSeconds(ms), color });
 }
 
