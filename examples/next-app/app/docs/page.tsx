@@ -20,6 +20,11 @@ const inputs: [string, string, string][] = [
   ],
   ["working-directory", ".", "Where the app is built, relative to the repository root."],
   ["budgets", "none", "Path to perf-trail.budgets.json, relative to the repository root."],
+  [
+    "bundle-chunks",
+    "none",
+    "JSON file of extra named gzip sizes in bytes, written by your build-command and merged into bundle.chunks.",
+  ],
   ["fail-on-budget", "true", "Fail the job on a missed budget. The entry is saved first."],
   [
     "data-branch",
@@ -222,7 +227,9 @@ export default function Docs() {
       <ul>
         <li>
           <code>PerfHistoryChart</code>: metric is lcp, cls, tbt, fcp, si, a score key or js. Takes
-          page, route, preset and budget. Renders an SVG with role="img" and a text summary.
+          page, route, preset and budget. Renders an SVG with role="img" and a text summary. Add
+          interactive for focusable points with tooltips; it is the only part that ships client
+          JavaScript.
         </li>
         <li>
           <code>LatestDeployCard</code>: scores and metrics of the newest entry with deltas against
@@ -234,7 +241,8 @@ export default function Docs() {
       </ul>
       <p>
         Import @perf-trail/react/styles.css and theme with CSS variables such as --pt-line,
-        --pt-good and --pt-poor. Colors follow your page's color-scheme.
+        --pt-good and --pt-poor. Colors follow your page's color-scheme. Every component takes
+        labels: translated strings plus a locale for dates.
       </p>
 
       <h2 id="recipes">Recipes</h2>

@@ -87,7 +87,7 @@ export default async function Perf() {
 }
 ```
 
-The components render pure SVG on the server with no client JavaScript, take `role="img"` with a text summary, and follow your page `color-scheme`.
+The components render pure SVG on the server with no client JavaScript, take `role="img"` with a text summary, and follow your page `color-scheme`. Pass `labels` to translate every string and format dates in your locale, and `interactive` to add a small client island with focusable points and tooltips (one tab stop, arrow keys move between deploys).
 
 ## Inputs
 
@@ -107,6 +107,7 @@ The components render pure SVG on the server with no client JavaScript, take `ro
 | `build-command` | none | shell command run in `working-directory` before measuring the bundle |
 | `working-directory` | `.` | where the app is built |
 | `budgets` | none | path to `perf-trail.budgets.json` |
+| `bundle-chunks` | none | JSON file of extra named gzip sizes in bytes, written by your build-command, merged into `bundle.chunks` |
 | `fail-on-budget` | `true` | fail the job on a broken budget, the entry is saved first |
 | `github-token` | `github.token` | needs `contents: write` |
 
