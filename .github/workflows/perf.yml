@@ -1,0 +1,24 @@
+name: Perf
+
+on:
+  deployment_status:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: perf-trail
+  cancel-in-progress: false
+
+jobs:
+  perf:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./
+        with:
+          urls: |
+            ${{ vars.EXAMPLE_SITE_URL }}/
+            ${{ vars.EXAMPLE_SITE_URL }}/about

@@ -1,0 +1,33 @@
+:root {
+  color-scheme: light dark;
+  --fg: #111;
+  --bg: #fff;
+  --accent: #0a6c3c;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fg: #eee;
+    --bg: #111;
+    --accent: #5fd39a;
+  }
+}
+
+body {
+  margin: 0 auto;
+  max-width: 40rem;
+  padding: 1rem;
+  font-family: system-ui, sans-serif;
+  line-height: 1.6;
+  color: var(--fg);
+  background: var(--bg);
+}
+
+nav {
+  display: flex;
+  gap: 1rem;
+}
+
+a {
+  color: var(--accent);
+}

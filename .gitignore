@@ -7,3 +7,5 @@ packages/*/dist
 .DS_Store
 .vercel
 .env*
+next-env.d.ts
+*.tsbuildinfo
