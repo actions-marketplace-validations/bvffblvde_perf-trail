@@ -1,0 +1,48 @@
+name: perf-trail
+description: Measure every deploy with Lighthouse and keep the history in a git branch
+author: bvffblvde
+branding:
+  icon: activity
+  color: green
+inputs:
+  urls:
+    description: Newline separated URLs to audit, all on one origin
+    required: true
+  runs:
+    description: Lighthouse runs per URL, the median run is stored
+    default: "3"
+  preset:
+    description: mobile or desktop
+    default: mobile
+  data-branch:
+    description: Branch that stores history.json
+    default: perf-data
+  max-entries:
+    description: How many entries the history keeps
+    default: "300"
+  environment-prefix:
+    description: deployment_status events are measured only when the environment starts with this
+    default: Production
+  use-deployment-url:
+    description: Audit the deployment URL from the event instead of urls (it may be behind deployment protection)
+    default: "false"
+  store-commit-message:
+    description: Store the first line of the commit message
+    default: "true"
+  revalidate-url:
+    description: URL to POST after the history is saved
+    required: false
+  revalidate-secret:
+    description: Sent as a bearer token to revalidate-url
+    required: false
+  github-token:
+    description: Token with contents write access
+    default: ${{ github.token }}
+outputs:
+  skipped:
+    description: true when the event was not measured
+  entry-json:
+    description: The saved history entry as JSON
+runs:
+  using: node24
+  main: packages/action/dist/index.js
