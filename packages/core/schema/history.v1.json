@@ -1,0 +1,179 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "v": {
+        "type": "number",
+        "const": 1
+      },
+      "sha": {
+        "type": "string",
+        "pattern": "^[0-9a-f]{7,64}$"
+      },
+      "date": {
+        "type": "string",
+        "format": "date-time",
+        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+      },
+      "message": {
+        "type": "string",
+        "maxLength": 100
+      },
+      "url": {
+        "type": "string",
+        "format": "uri"
+      },
+      "preset": {
+        "type": "string",
+        "enum": [
+          "mobile",
+          "desktop"
+        ]
+      },
+      "pages": {
+        "type": "object",
+        "propertyNames": {
+          "type": "string"
+        },
+        "additionalProperties": {
+          "type": "object",
+          "properties": {
+            "scores": {
+              "type": "object",
+              "properties": {
+                "performance": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "accessibility": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "bestPractices": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "seo": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 100
+                }
+              },
+              "required": [
+                "performance",
+                "accessibility",
+                "bestPractices",
+                "seo"
+              ],
+              "additionalProperties": false
+            },
+            "metrics": {
+              "type": "object",
+              "properties": {
+                "lcp": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "cls": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "tbt": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "fcp": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "si": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "lcp",
+                "cls",
+                "tbt",
+                "fcp",
+                "si"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "scores",
+            "metrics"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "bundle": {
+        "type": "object",
+        "properties": {
+          "routes": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "chunks": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          }
+        },
+        "required": [
+          "routes"
+        ],
+        "additionalProperties": false
+      },
+      "budgets": {
+        "type": "object",
+        "properties": {
+          "passed": {
+            "type": "boolean"
+          },
+          "failures": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "passed",
+          "failures"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "required": [
+      "v",
+      "sha",
+      "date",
+      "url",
+      "preset",
+      "pages"
+    ],
+    "additionalProperties": false
+  },
+  "$id": "https://raw.githubusercontent.com/bvffblvde/perf-trail/main/packages/core/schema/history.v1.json",
+  "title": "perf-trail history v1"
+}

@@ -1,0 +1,39 @@
+{
+  "name": "@perf-trail/core",
+  "version": "0.0.0",
+  "description": "History format, schema and stats for perf-trail",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bvffblvde/perf-trail.git",
+    "directory": "packages/core"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema.json": "./schema/history.v1.json"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "./schema.json": "./schema/history.v1.json"
+    }
+  },
+  "files": [
+    "dist",
+    "schema"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc",
+    "test": "vitest run",
+    "schema": "node scripts/write-schema.ts"
+  },
+  "dependencies": {
+    "zod": "^4.6.5"
+  }
+}
