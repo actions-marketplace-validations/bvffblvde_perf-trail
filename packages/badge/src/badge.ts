@@ -18,13 +18,14 @@ export function renderBadge({ label, message, color }: BadgeOptions): string {
   const messageWidth = Math.round(textWidth(message) + PADDING * 2);
   const width = labelWidth + messageWidth;
   const title = escapeXml(`${label}: ${message}`);
+  const clip = `pt-badge-${`${label}-${message}`.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
   const text = (value: string, x: number, w: number) =>
     `<text x="${x * 10}" y="140" transform="scale(.1)" textLength="${Math.round((w - PADDING * 2) * 10)}">${escapeXml(value)}</text>`;
   return [
     `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${HEIGHT}" role="img" aria-label="${title}">`,
     `<title>${title}</title>`,
-    `<clipPath id="r"><rect width="${width}" height="${HEIGHT}" rx="3" fill="#fff"/></clipPath>`,
-    `<g clip-path="url(#r)">`,
+    `<clipPath id="${clip}"><rect width="${width}" height="${HEIGHT}" rx="3" fill="#fff"/></clipPath>`,
+    `<g clip-path="url(#${clip})">`,
     `<rect width="${labelWidth}" height="${HEIGHT}" fill="${colors.label}"/>`,
     `<rect x="${labelWidth}" width="${messageWidth}" height="${HEIGHT}" fill="${escapeXml(color)}"/>`,
     `</g>`,

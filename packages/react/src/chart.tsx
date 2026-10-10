@@ -23,6 +23,7 @@ export type PerfHistoryChartProps = {
   height?: number;
   showCaption?: boolean;
   className?: string;
+  id?: string;
 };
 
 const MARGIN = { top: 16, right: 16, bottom: 30, left: 52 };
@@ -40,6 +41,7 @@ export function PerfHistoryChart({
   height = 240,
   showCaption = true,
   className,
+  id: idProp,
 }: PerfHistoryChartProps) {
   const points = seriesFor(history, {
     metric,
@@ -49,7 +51,7 @@ export function PerfHistoryChart({
   });
   const subject = page ?? route;
   const heading = title ?? `${labelOf(metric)}${subject ? ` on ${subject}` : ""}`;
-  const id = `pt-${metric}-${slug(subject ?? "all")}-${preset}`;
+  const id = idProp ?? `pt-${metric}-${slug(subject ?? "all")}-${preset}`;
   const summary = describe(metric, points, budget);
   const classes = ["pt-chart", className].filter(Boolean).join(" ");
 
