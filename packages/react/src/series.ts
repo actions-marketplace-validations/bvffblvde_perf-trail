@@ -106,6 +106,6 @@ export function domainFor(
     return [Math.max(0, Math.floor((Math.min(low, 95) - step / 2) / step) * step), 100];
   }
   const high = Math.max(...all, metric === "cls" ? 0.01 : 1) * 1.15;
-  const ticks = niceTicks(0, high, 4);
-  return [0, ticks[ticks.length - 1] as number];
+  const step = niceStep(high, 4);
+  return [0, Number((Math.ceil(high / step) * step).toFixed(10))];
 }

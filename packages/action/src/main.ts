@@ -134,11 +134,31 @@ async function measureBuild(inputs: Inputs, cwd: string, sha: string): Promise<B
       runBuild(inputs.buildCommand as string, cwd),
     );
   }
-  const bundle = measureBundle(inputs.bundle, cwd);
+  const measured = measureBundle(inputs.bundle, cwd);
+  const bundle = inputs.bundleChunks
+    ? {
+        ...measured,
+        chunks: { ...measured.chunks, ...(await readChunks(resolve(cwd, inputs.bundleChunks))) },
+      }
+    : measured;
   for (const [route, bytes] of Object.entries(bundle.routes)) {
     core.info(`bundle ${route}: ${(bytes / 1024).toFixed(1)} KiB gzip`);
   }
   return bundle;
+}
+
+async function readChunks(path: string): Promise<Record<string, number>> {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(await readFile(path, "utf8"));
+  } catch {
+    throw new Error(`bundle-chunks file ${path} is missing or not JSON: write it in build-command`);
+  }
+  const entries = Object.entries(typeof parsed === "object" && parsed !== null ? parsed : {});
+  if (Array.isArray(parsed) || entries.some(([, v]) => !Number.isInteger(v) || (v as number) < 0)) {
+    throw new Error(`bundle-chunks file ${path} must map names to gzip byte counts`);
+  }
+  return Object.fromEntries(entries) as Record<string, number>;
 }
 
 async function readBudgets(path: string): Promise<Budgets> {

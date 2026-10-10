@@ -1,6 +1,6 @@
 {
   "name": "@perf-trail/react",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Server-rendered SVG charts, latest deploy card and table for perf-trail history",
   "license": "MIT",
   "repository": {
@@ -17,6 +17,7 @@
     "./styles.css": "./src/styles.css"
   },
   "publishConfig": {
+    "access": "public",
     "exports": {
       ".": {
         "types": "./dist/index.d.ts",
@@ -44,5 +45,13 @@
     "@types/react-dom": "^19.3.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
-  }
+  },
+  "homepage": "https://perf-trail.vercel.app",
+  "keywords": [
+    "lighthouse",
+    "performance",
+    "web-vitals",
+    "bundle-size",
+    "github-action"
+  ]
 }

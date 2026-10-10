@@ -1,15 +1,16 @@
 import type { History, Preset } from "@perf-trail/core";
+import { formatDate, type LabelsInput, type PerfLabels, resolveLabels } from "./labels.ts";
 import {
   breaches,
   type ChartMetric,
   domainFor,
   formatValue,
   higherIsBetter,
-  labelOf,
   niceTicks,
   type Point,
   seriesFor,
 } from "./series.ts";
+import { ChartTooltip, type TooltipPoint } from "./tooltip.tsx";
 
 export type PerfHistoryChartProps = {
   history: History;
@@ -22,12 +23,21 @@ export type PerfHistoryChartProps = {
   width?: number;
   height?: number;
   showCaption?: boolean;
+  interactive?: boolean;
+  labels?: LabelsInput;
   className?: string;
   id?: string;
 };
 
 const MARGIN = { top: 16, right: 16, bottom: 30, left: 52 };
 const MAX_MARKERS = 60;
+
+type Geometry = {
+  x: (i: number) => number;
+  y: (value: number) => number;
+  low: number;
+  high: number;
+};
 
 export function PerfHistoryChart({
   history,
@@ -40,9 +50,12 @@ export function PerfHistoryChart({
   width = 640,
   height = 240,
   showCaption = true,
+  interactive = false,
+  labels: labelsInput,
   className,
   id: idProp,
 }: PerfHistoryChartProps) {
+  const labels = resolveLabels(labelsInput);
   const points = seriesFor(history, {
     metric,
     ...(page ? { page } : {}),
@@ -50,27 +63,101 @@ export function PerfHistoryChart({
     preset,
   });
   const subject = page ?? route;
-  const heading = title ?? `${labelOf(metric)}${subject ? ` on ${subject}` : ""}`;
+  const heading = title ?? labels.chartTitle(labels.metrics[metric], subject);
   const id = idProp ?? `pt-${metric}-${slug(subject ?? "all")}-${preset}`;
-  const summary = describe(metric, points, budget);
+  const summary = describe(metric, points, budget, labels);
   const classes = ["pt-chart", className].filter(Boolean).join(" ");
+  const geometry =
+    points.length > 0 ? geometryFor(points, metric, budget, width, height) : undefined;
+
+  const svg = (
+    <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-labelledby={`${id}-title ${id}-desc`}>
+      <title id={`${id}-title`}>{heading}</title>
+      <desc id={`${id}-desc`}>{summary}</desc>
+      {geometry ? (
+        <Plot
+          points={points}
+          metric={metric}
+          budget={budget}
+          width={width}
+          height={height}
+          geometry={geometry}
+          labels={labels}
+          markers={!interactive}
+        />
+      ) : (
+        <text className="pt-empty" x={width / 2} y={height / 2} textAnchor="middle">
+          {labels.empty}
+        </text>
+      )}
+    </svg>
+  );
 
   return (
     <figure className={classes} data-metric={metric}>
-      <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-labelledby={`${id}-title ${id}-desc`}>
-        <title id={`${id}-title`}>{heading}</title>
-        <desc id={`${id}-desc`}>{summary}</desc>
-        {points.length === 0 ? (
-          <text className="pt-empty" x={width / 2} y={height / 2} textAnchor="middle">
-            No deploys measured yet
-          </text>
-        ) : (
-          <Plot points={points} metric={metric} budget={budget} width={width} height={height} />
-        )}
-      </svg>
+      {interactive && geometry ? (
+        <div className="pt-plot">
+          {svg}
+          <ChartTooltip
+            label={heading}
+            hint={labels.tooltipHint}
+            points={tooltipPoints(points, metric, budget, geometry, width, height, labels)}
+          />
+        </div>
+      ) : (
+        svg
+      )}
       {showCaption ? <figcaption>{summary}</figcaption> : null}
     </figure>
   );
+}
+
+function geometryFor(
+  points: Point[],
+  metric: ChartMetric,
+  budget: number | undefined,
+  width: number,
+  height: number,
+): Geometry {
+  const [low, high] = domainFor(
+    metric,
+    points.map((p) => p.value),
+    budget,
+  );
+  const plotWidth = width - MARGIN.left - MARGIN.right;
+  const plotHeight = height - MARGIN.top - MARGIN.bottom;
+  return {
+    low,
+    high,
+    x: (i) =>
+      round(
+        MARGIN.left + (points.length === 1 ? plotWidth / 2 : (i / (points.length - 1)) * plotWidth),
+      ),
+    y: (value) => round(MARGIN.top + (1 - (value - low) / (high - low || 1)) * plotHeight),
+  };
+}
+
+function tooltipPoints(
+  points: Point[],
+  metric: ChartMetric,
+  budget: number | undefined,
+  { x, y }: Geometry,
+  width: number,
+  height: number,
+  labels: PerfLabels,
+): TooltipPoint[] {
+  return points.map((point, i) => {
+    const sha = point.entry.sha.slice(0, 7);
+    const date = formatDate(point.entry.date, labels.locale);
+    const value = formatValue(metric, point.value);
+    return {
+      x: (x(i) / width) * 100,
+      y: (y(point.value) / height) * 100,
+      label: labels.point({ sha, date, value }),
+      lines: [`${date}, ${sha}`, ...(point.entry.message ? [point.entry.message] : []), value],
+      ...(breaches(metric, point.value, budget) ? { breach: true } : {}),
+    };
+  });
 }
 
 function Plot({
@@ -79,29 +166,23 @@ function Plot({
   budget,
   width,
   height,
+  geometry: { x, y, low, high },
+  labels,
+  markers,
 }: {
   points: Point[];
   metric: ChartMetric;
   budget: number | undefined;
   width: number;
   height: number;
+  geometry: Geometry;
+  labels: PerfLabels;
+  markers: boolean;
 }) {
-  const [low, high] = domainFor(
-    metric,
-    points.map((p) => p.value),
-    budget,
-  );
-  const plotWidth = width - MARGIN.left - MARGIN.right;
-  const plotHeight = height - MARGIN.top - MARGIN.bottom;
-  const x = (i: number) =>
-    MARGIN.left + (points.length === 1 ? plotWidth / 2 : (i / (points.length - 1)) * plotWidth);
-  const y = (value: number) => MARGIN.top + (1 - (value - low) / (high - low || 1)) * plotHeight;
   const ticks = niceTicks(low, high, 4).filter((t) => t >= low && t <= high);
-  const line = points
-    .map((p, i) => `${i === 0 ? "M" : "L"}${round(x(i))} ${round(y(p.value))}`)
-    .join("");
-  const baseline = round(y(low));
-  const area = `${line}L${round(x(points.length - 1))} ${baseline}L${round(x(0))} ${baseline}Z`;
+  const line = points.map((p, i) => `${i === 0 ? "M" : "L"}${x(i)} ${y(p.value)}`).join("");
+  const baseline = y(low);
+  const area = `${line}L${x(points.length - 1)} ${baseline}L${x(0)} ${baseline}Z`;
   const showAll = points.length <= MAX_MARKERS;
   const last = points.length - 1;
   const xLabels = points.length === 1 ? [0] : [0, last];
@@ -111,13 +192,8 @@ function Plot({
       <g className="pt-grid">
         {ticks.map((tick) => (
           <g key={tick}>
-            <line
-              x1={MARGIN.left}
-              x2={width - MARGIN.right}
-              y1={round(y(tick))}
-              y2={round(y(tick))}
-            />
-            <text x={MARGIN.left - 8} y={round(y(tick))} dy="0.32em" textAnchor="end">
+            <line x1={MARGIN.left} x2={width - MARGIN.right} y1={y(tick)} y2={y(tick)} />
+            <text x={MARGIN.left - 8} y={y(tick)} dy="0.32em" textAnchor="end">
               {formatValue(metric, tick)}
             </text>
           </g>
@@ -127,7 +203,7 @@ function Plot({
         {xLabels.map((i) => (
           <text
             key={i}
-            x={round(x(i))}
+            x={x(i)}
             y={height - 8}
             textAnchor={points.length === 1 ? "middle" : i === 0 ? "start" : "end"}
           >
@@ -137,14 +213,9 @@ function Plot({
       </g>
       {budget !== undefined && budget >= low && budget <= high ? (
         <g className="pt-budget">
-          <line
-            x1={MARGIN.left}
-            x2={width - MARGIN.right}
-            y1={round(y(budget))}
-            y2={round(y(budget))}
-          />
-          <text x={width - MARGIN.right} y={round(y(budget)) - 6} textAnchor="end">
-            budget {formatValue(metric, budget)}
+          <line x1={MARGIN.left} x2={width - MARGIN.right} y1={y(budget)} y2={y(budget)} />
+          <text x={width - MARGIN.right} y={y(budget) - 6} textAnchor="end">
+            {labels.budgetLine(formatValue(metric, budget))}
           </text>
         </g>
       ) : null}
@@ -153,18 +224,26 @@ function Plot({
       <g className="pt-points">
         {points.map((point, i) => {
           const breach = breaches(metric, point.value, budget);
-          if (!showAll && !breach && i !== last) return null;
+          if (!breach && i !== last && (!markers || !showAll)) return null;
           return (
             <circle
               key={point.entry.sha}
               className={
                 breach ? "pt-point pt-breach" : i === last ? "pt-point pt-last" : "pt-point"
               }
-              cx={round(x(i))}
-              cy={round(y(point.value))}
+              cx={x(i)}
+              cy={y(point.value)}
               r={i === last ? 4.5 : 3}
             >
-              <title>{`${point.entry.sha.slice(0, 7)}, ${point.entry.date.slice(0, 10)}: ${formatValue(metric, point.value)}`}</title>
+              {markers ? (
+                <title>
+                  {labels.point({
+                    sha: point.entry.sha.slice(0, 7),
+                    date: formatDate(point.entry.date, labels.locale),
+                    value: formatValue(metric, point.value),
+                  })}
+                </title>
+              ) : null}
             </circle>
           );
         })}
@@ -173,27 +252,26 @@ function Plot({
   );
 }
 
-export function describe(metric: ChartMetric, points: Point[], budget?: number): string {
-  const label = labelOf(metric);
-  if (points.length === 0) return `${label}: no deploys measured yet.`;
-  const first = points[0] as Point;
-  const last = points[points.length - 1] as Point;
+export function describe(
+  metric: ChartMetric,
+  points: Point[],
+  budget?: number,
+  labels: PerfLabels = resolveLabels(undefined),
+): string {
+  const label = labels.metrics[metric];
+  if (points.length === 0) return `${label}: ${labels.empty}.`;
   const values = points.map((p) => p.value);
   const best = higherIsBetter(metric) ? Math.max(...values) : Math.min(...values);
-  const parts = [
-    points.length === 1
-      ? `${label} ${formatValue(metric, last.value)} on the only measured deploy.`
-      : `${label} went from ${formatValue(metric, first.value)} to ${formatValue(metric, last.value)} over ${points.length} deploys, best ${formatValue(metric, best)}.`,
-  ];
-  if (budget !== undefined) {
-    const over = points.filter((p) => breaches(metric, p.value, budget)).length;
-    parts.push(
-      over === 0
-        ? `All within the ${formatValue(metric, budget)} budget.`
-        : `${over} of ${points.length} outside the ${formatValue(metric, budget)} budget.`,
-    );
-  }
-  return parts.join(" ");
+  return labels.summary({
+    metric,
+    label,
+    count: points.length,
+    first: formatValue(metric, (points[0] as Point).value),
+    last: formatValue(metric, (points[points.length - 1] as Point).value),
+    best: formatValue(metric, best),
+    ...(budget === undefined ? {} : { budget: formatValue(metric, budget) }),
+    over: points.filter((p) => breaches(metric, p.value, budget)).length,
+  });
 }
 
 function round(value: number): number {

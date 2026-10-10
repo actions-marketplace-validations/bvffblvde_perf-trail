@@ -1,6 +1,6 @@
 {
   "name": "@perf-trail/core",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "History format, schema and stats for perf-trail",
   "license": "MIT",
   "repository": {
@@ -16,6 +16,7 @@
     "./budgets.schema.json": "./schema/budgets.v1.json"
   },
   "publishConfig": {
+    "access": "public",
     "exports": {
       ".": {
         "types": "./dist/index.d.ts",
@@ -37,5 +38,13 @@
   },
   "dependencies": {
     "zod": "^4.6.5"
-  }
+  },
+  "homepage": "https://perf-trail.vercel.app",
+  "keywords": [
+    "lighthouse",
+    "performance",
+    "web-vitals",
+    "bundle-size",
+    "github-action"
+  ]
 }

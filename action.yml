@@ -47,6 +47,9 @@ inputs:
   budgets:
     description: Path to perf-trail.budgets.json, relative to the repository root
     required: false
+  bundle-chunks:
+    description: JSON file with extra named gzip sizes in bytes, relative to working-directory, merged into bundle.chunks
+    required: false
   fail-on-budget:
     description: Fail the job when a budget is broken (the entry is saved first)
     default: "true"

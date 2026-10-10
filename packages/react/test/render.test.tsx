@@ -88,7 +88,9 @@ describe("LatestDeployCard", () => {
     const out = html(<LatestDeployCard history={history} repo="o/r" />);
     expect(out).toContain(`href="https://github.com/o/r/commit/${history[1]?.sha}"`);
     expect(out).toContain("feat: change 1");
-    expect(out).toContain('<span class="pt-delta pt-improved">-0.2 s</span>');
+    expect(out).toContain(
+      '<span aria-hidden="true">-0.2 s</span><span class="pt-sr">down by 0.2 s</span>',
+    );
     expect(out).toContain("All budgets passed.");
     expect(out).toMatchSnapshot();
   });
@@ -101,8 +103,86 @@ describe("LatestDeployCard", () => {
 describe("PerfHistoryTable", () => {
   it("lists the newest deploys first", () => {
     const out = html(<PerfHistoryTable history={series(15, (i) => 1000 + i)} limit={3} />);
-    expect(out.match(/<tr>/g)).toHaveLength(4);
+    expect(out.match(/<tr\b/g)).toHaveLength(4);
     expect(out.indexOf("feat: change 14")).toBeLessThan(out.indexOf("feat: change 13"));
     expect(out).toContain("Last 3 deploys of /, newest first");
+  });
+});
+
+describe("labels and interactivity", () => {
+  const uk = {
+    locale: "uk",
+    metrics: { lcp: "LCP" },
+    empty: "Ще немає виміряних деплоїв",
+    budgetLine: (value: string) => `бюджет ${value}`,
+    summary: ({ count, last }: { count: number; last: string }) =>
+      `${count} деплоїв, останній ${last}.`,
+    deltaDown: (value: string) => `менше на ${value}`,
+    columns: { commit: "Коміт", budgets: "Бюджети" },
+    passed: "пройдено",
+  };
+
+  it("translates the chart", () => {
+    const out = html(
+      <PerfHistoryChart
+        history={series(3, () => 1400)}
+        metric="lcp"
+        page="/"
+        budget={2500}
+        labels={uk}
+      />,
+    );
+    expect(out).toContain("3 деплоїв, останній 1.4 s.");
+    expect(out).toContain("бюджет 2.5 s");
+    expect(html(<PerfHistoryChart history={[]} metric="lcp" labels={uk} />)).toContain(
+      "Ще немає виміряних деплоїв",
+    );
+  });
+
+  it("formats dates in the given locale", () => {
+    const out = html(<PerfHistoryTable history={series(1, () => 1400)} labels={uk} />);
+    expect(out).toContain("Коміт");
+    expect(out).toContain(
+      new Date(Date.UTC(2026, 0, 1)).toLocaleDateString("uk", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        timeZone: "UTC",
+      }),
+    );
+  });
+
+  it("renders one focusable stop per chart when interactive", () => {
+    const out = html(
+      <PerfHistoryChart history={series(5, (i) => 1400 + i)} metric="lcp" page="/" interactive />,
+    );
+    expect(out).toContain('role="toolbar"');
+    expect(out.match(/<button/g)).toHaveLength(5);
+    expect(out.match(/tabindex="0"/g)).toHaveLength(1);
+    expect(out).not.toContain('<circle class="pt-point"');
+  });
+
+  it("shows scores for several pages, a chosen JS route and budget limits", () => {
+    const history = [entry(0, 2000), entry(1, 1800, { budgets: { passed: true, failures: [] } })];
+    for (const e of history) e.pages["/cv"] = e.pages["/"] as Entry["pages"][string];
+    const out = html(
+      <LatestDeployCard
+        history={history}
+        pages={["/", "/cv"]}
+        jsRoute="/about"
+        budgets={{ metrics: { lcp: 2500 }, bundle: { maxKiB: 160 } }}
+      />,
+    );
+    expect(out.match(/class="pt-page-name"/g)).toHaveLength(2);
+    expect(out).toContain("JS on /about");
+    expect(out).toContain('<span class="pt-limit">budget 2.5 s</span>');
+    expect(out).toContain('<span class="pt-limit">budget 160 KiB</span>');
+  });
+
+  it("adds a budgets column when entries carry budgets", () => {
+    const history = [entry(0, 2000, { budgets: { passed: false, failures: ["x"] } })];
+    const out = html(<PerfHistoryTable history={history} labels={uk} />);
+    expect(out).toContain("Бюджети");
+    expect(out).toContain('<td class="pt-poor">failed</td>');
   });
 });

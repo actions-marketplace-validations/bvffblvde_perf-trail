@@ -17,6 +17,7 @@ export type Inputs = {
   buildCommand?: string;
   workingDirectory: string;
   budgetsPath?: string;
+  bundleChunks?: string;
   failOnBudget: boolean;
 };
 
@@ -28,6 +29,7 @@ export function readInputs(get: GetInput): Inputs {
   const revalidateSecret = optional(get("revalidate-secret"));
   const buildCommand = optional(get("build-command"));
   const budgetsPath = optional(get("budgets"));
+  const bundleChunks = optional(get("bundle-chunks"));
   return {
     urls,
     runs: integer(get, "runs", 3, 1, 15),
@@ -44,6 +46,7 @@ export function readInputs(get: GetInput): Inputs {
     ...(buildCommand ? { buildCommand } : {}),
     workingDirectory: optional(get("working-directory")) ?? ".",
     ...(budgetsPath ? { budgetsPath } : {}),
+    ...(bundleChunks ? { bundleChunks } : {}),
     failOnBudget: boolean(get, "fail-on-budget", true),
   };
 }

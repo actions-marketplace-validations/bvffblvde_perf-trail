@@ -240,3 +240,89 @@
 .pt-commit code {
   font-size: 0.9em;
 }
+
+.pt-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.pt-limit {
+  display: block;
+  color: var(--pt-muted);
+  font-size: 0.75em;
+  font-weight: 400;
+}
+
+.pt-page-name {
+  margin: 0 0 0.25rem;
+  color: var(--pt-muted);
+  font-size: 0.875em;
+}
+
+.pt-plot {
+  position: relative;
+}
+
+.pt-tip-layer {
+  position: absolute;
+  inset: 0;
+}
+
+.pt-tip-point {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+}
+
+.pt-tip-point::after {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border-radius: 50%;
+  border: 2px solid var(--pt-line);
+  background: Canvas;
+}
+
+.pt-tip-point.pt-active::after {
+  inset: 2px;
+  background: var(--pt-line);
+}
+
+.pt-tip-point:focus-visible {
+  outline: 2px solid var(--pt-line);
+  outline-offset: 1px;
+}
+
+.pt-tip {
+  position: absolute;
+  z-index: 1;
+  width: max-content;
+  max-width: 16rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--pt-grid);
+  border-radius: 6px;
+  background: Canvas;
+  color: CanvasText;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  pointer-events: none;
+  transform: translate(-50%, 0.75rem);
+}
+
+.pt-tip p {
+  margin: 0;
+}
+
+.pt-tip p:first-child {
+  color: var(--pt-muted);
+}

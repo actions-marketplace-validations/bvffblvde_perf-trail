@@ -248,3 +248,28 @@ describe("run with bundle, budgets and badges", () => {
     expect(savedFile("badges/performance.svg")).toBeUndefined();
   });
 });
+
+describe("bundle-chunks", () => {
+  const write = (value: unknown) =>
+    writeFileSync(
+      join(process.env.GITHUB_WORKSPACE as string, "chunks.json"),
+      JSON.stringify(value),
+    );
+
+  it("merges named chunk sizes into the bundle", async () => {
+    write({ editor: 16_896 });
+    Object.assign(state.inputs, { bundle: "glob:dist/*.js", "bundle-chunks": "chunks.json" });
+    await run();
+    expect(state.failed).toBeUndefined();
+    const [entry] = savedHistory() as { bundle: { chunks: Record<string, number> } }[];
+    expect(entry?.bundle.chunks.editor).toBe(16_896);
+    expect(entry?.bundle.chunks["dist/app.js"]).toBeGreaterThan(0);
+  });
+
+  it("rejects values that are not byte counts", async () => {
+    write({ editor: 16.5 });
+    Object.assign(state.inputs, { bundle: "glob:dist/*.js", "bundle-chunks": "chunks.json" });
+    await run();
+    expect(state.failed).toContain("must map names to gzip byte counts");
+  });
+});

@@ -1,6 +1,6 @@
 {
   "name": "@perf-trail/bundle",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Bundle size adapters for perf-trail: Next.js, Vite and glob",
   "license": "MIT",
   "repository": {
@@ -14,6 +14,7 @@
     ".": "./src/index.ts"
   },
   "publishConfig": {
+    "access": "public",
     "exports": {
       ".": {
         "types": "./dist/index.d.ts",
@@ -34,5 +35,13 @@
   },
   "dependencies": {
     "@perf-trail/core": "workspace:*"
-  }
+  },
+  "homepage": "https://perf-trail.vercel.app",
+  "keywords": [
+    "lighthouse",
+    "performance",
+    "web-vitals",
+    "bundle-size",
+    "github-action"
+  ]
 }
