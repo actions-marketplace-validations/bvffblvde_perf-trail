@@ -1,0 +1,26 @@
+name: Move major action tag
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  tag:
+    if: startsWith(github.event.release.tag_name, 'v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.release.tag_name }}
+      - name: Point the major tag at this release
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          major="${TAG%%.*}"
+          git config user.name "bvffblvde"
+          git config user.email "krakenitsmydog@gmail.com"
+          git tag -fa "$major" -m "$TAG"
+          git push --force origin "refs/tags/$major"

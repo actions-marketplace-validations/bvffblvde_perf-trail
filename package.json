@@ -11,10 +11,14 @@
     "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck",
     "lint": "biome check .",
-    "format": "biome check --write ."
+    "format": "biome check --write .",
+    "changeset": "changeset",
+    "version-packages": "changeset version && pnpm install --lockfile-only",
+    "release": "pnpm -r --filter \"./packages/*\" build && node scripts/publish.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",
+    "@changesets/cli": "^3.0.3",
     "@types/node": "^24",
     "typescript": "^7.0.2",
     "vitest": "^5.0.3"
