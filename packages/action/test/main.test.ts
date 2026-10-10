@@ -1,4 +1,6 @@
-import { readFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Lhr } from "../src/lighthouse.ts";
 import { type FakeBranch, fakeGitHub } from "./fake-github.ts";
@@ -12,6 +14,9 @@ const state = vi.hoisted(() => ({
   context: { eventName: "", payload: {} as unknown, sha: "", repo: { owner: "o", repo: "r" } },
   audited: [] as string[],
   branches: {} as Record<string, FakeBranch>,
+  summary: "",
+  head: undefined as string | undefined,
+  builds: [] as string[],
 }));
 
 vi.mock("@actions/core", () => ({
@@ -25,6 +30,20 @@ vi.mock("@actions/core", () => ({
     state.failed = message;
   },
   group: async <T>(_name: string, fn: () => Promise<T>) => fn(),
+  summary: {
+    addRaw(text: string) {
+      state.summary += text;
+      return this;
+    },
+    write: async () => {},
+  },
+}));
+
+vi.mock("../src/build.ts", () => ({
+  checkedOutSha: async () => state.head,
+  runBuild: async (command: string) => {
+    state.builds.push(command);
+  },
 }));
 
 vi.mock("@actions/github", () => ({
@@ -67,9 +86,22 @@ beforeEach(() => {
   state.warnings = [];
   state.failed = undefined;
   state.audited = [];
+  state.summary = "";
+  state.head = SHA;
+  state.builds = [];
+  process.env.GITHUB_WORKSPACE = workspace();
   Object.assign(state.context, { eventName: "workflow_dispatch", payload: {}, sha: SHA });
   gh.current = fakeGitHub();
 });
+
+function workspace(): string {
+  const dir = mkdtempSync(join(tmpdir(), "perf-trail-action-"));
+  mkdirSync(join(dir, "dist"));
+  writeFileSync(join(dir, "dist", "app.js"), "console.log(1);".repeat(400));
+  return dir;
+}
+
+const savedFile = (path: string) => gh.current?.branches.get("perf-data")?.files[path];
 
 const savedHistory = () =>
   JSON.parse(gh.current?.branches.get("perf-data")?.files["history.json"] ?? "null") as unknown[];
@@ -139,5 +171,80 @@ describe("run", () => {
     expect(state.failed).toBeUndefined();
     expect(state.warnings.join("\n")).toContain("HTTP 500");
     expect(savedHistory()).toHaveLength(1);
+  });
+});
+
+describe("run with bundle, budgets and badges", () => {
+  const budgets = (value: unknown) =>
+    writeFileSync(
+      join(process.env.GITHUB_WORKSPACE as string, "budgets.json"),
+      JSON.stringify(value),
+    );
+
+  it("builds, measures the bundle and writes badges and a summary", async () => {
+    Object.assign(state.inputs, { bundle: "glob:dist/*.js", "build-command": "make" });
+    await run();
+    expect(state.failed).toBeUndefined();
+    expect(state.builds).toEqual(["make"]);
+    const [entry] = savedHistory() as { bundle: { routes: Record<string, number> } }[];
+    expect(entry?.bundle.routes["dist/*.js"]).toBeGreaterThan(0);
+    expect(savedFile("badges/performance.svg")).toContain("Lighthouse: 93");
+    expect(savedFile("badges/pages/en-cv/lcp.svg")).toContain("LCP: 0.96 s");
+    expect(savedFile("badges/js.svg")).toContain("JS: ");
+    expect(state.summary).toContain("| `/en` | 93 | 96 | 100 | 80 | 962 ms |");
+    expect(state.outputs["summary-markdown"]).toBe(state.summary);
+    expect(state.outputs["budget-passed"]).toBe("true");
+  });
+
+  it("warns when the checkout is not the measured commit", async () => {
+    state.inputs.bundle = "glob:dist/*.js";
+    state.head = "0000000aaaa";
+    await run();
+    expect(state.warnings.join("\n")).toContain("bundle sizes come from a different commit");
+  });
+
+  it("fails without a checkout when the bundle is measured", async () => {
+    state.inputs.bundle = "glob:dist/*.js";
+    state.head = undefined;
+    await run();
+    expect(state.failed).toContain("actions/checkout");
+  });
+
+  it("saves the entry first and then fails on a broken budget", async () => {
+    budgets({ scores: { performance: 95 } });
+    state.inputs.budgets = "budgets.json";
+    await run();
+    expect(savedHistory()[0]).toMatchObject({
+      budgets: {
+        passed: false,
+        failures: ["/en performance 93 < 95", "/en/cv performance 93 < 95"],
+      },
+    });
+    expect(state.outputs["budget-passed"]).toBe("false");
+    expect(state.summary).toContain("**Budgets failed:**");
+    expect(state.failed).toContain("/en performance 93 < 95");
+  });
+
+  it("only warns on a broken budget when fail-on-budget is false", async () => {
+    budgets({ scores: { performance: 95 } });
+    Object.assign(state.inputs, { budgets: "budgets.json", "fail-on-budget": "false" });
+    await run();
+    expect(state.failed).toBeUndefined();
+    expect(state.warnings.join("\n")).toContain("Budgets failed");
+  });
+
+  it("rejects an invalid budgets file before measuring", async () => {
+    budgets({ scores: { speed: 1 } });
+    state.inputs.budgets = "budgets.json";
+    await run();
+    expect(state.failed).toContain("invalid budgets");
+    expect(state.audited).toEqual([]);
+  });
+
+  it("keeps desktop badges apart", async () => {
+    state.inputs.preset = "desktop";
+    await run();
+    expect(savedFile("badges/desktop/performance.svg")).toBeDefined();
+    expect(savedFile("badges/performance.svg")).toBeUndefined();
   });
 });

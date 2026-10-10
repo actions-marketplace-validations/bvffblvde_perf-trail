@@ -17,8 +17,24 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.deployment.sha || github.sha }}
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          package-manager-cache: false
+      - run: |
+          npm install --global corepack@latest
+          corepack enable
+          pnpm install --frozen-lockfile
+        env:
+          COREPACK_ENABLE_DOWNLOAD_PROMPT: "0"
       - uses: ./
         with:
           urls: |
             ${{ vars.EXAMPLE_SITE_URL }}/
             ${{ vars.EXAMPLE_SITE_URL }}/about
+          working-directory: examples/next-app
+          build-command: pnpm build
+          bundle: next
+          budgets: examples/next-app/perf-trail.budgets.json

@@ -35,6 +35,21 @@ inputs:
   revalidate-secret:
     description: Sent as a bearer token to revalidate-url
     required: false
+  bundle:
+    description: Measure gzip JS per route with next, vite or glob:<pattern>, or off
+    default: "off"
+  build-command:
+    description: Shell command run in working-directory before the bundle is measured
+    required: false
+  working-directory:
+    description: Directory with the app build, relative to the repository root
+    default: "."
+  budgets:
+    description: Path to perf-trail.budgets.json, relative to the repository root
+    required: false
+  fail-on-budget:
+    description: Fail the job when a budget is broken (the entry is saved first)
+    default: "true"
   github-token:
     description: Token with contents write access
     default: ${{ github.token }}
@@ -43,6 +58,10 @@ outputs:
     description: true when the event was not measured
   entry-json:
     description: The saved history entry as JSON
+  budget-passed:
+    description: false when a budget was broken
+  summary-markdown:
+    description: The job summary as Markdown
 runs:
   using: node24
   main: packages/action/dist/index.js

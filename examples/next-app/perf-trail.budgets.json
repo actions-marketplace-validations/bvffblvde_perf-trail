@@ -1,0 +1,6 @@
+{
+  "$schema": "../../packages/core/schema/budgets.v1.json",
+  "scores": { "performance": 90, "accessibility": 95, "bestPractices": 95, "seo": 95 },
+  "metrics": { "lcp": 2500, "cls": 0.1, "tbt": 300 },
+  "bundle": { "maxKiB": 200 }
+}

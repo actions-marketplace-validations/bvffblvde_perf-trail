@@ -1,3 +1,4 @@
+import { type BundleSpec, parseBundleSpec } from "@perf-trail/bundle";
 import type { Preset } from "@perf-trail/core";
 
 export type Inputs = {
@@ -12,6 +13,11 @@ export type Inputs = {
   storeCommitMessage: boolean;
   revalidateUrl?: URL;
   revalidateSecret?: string;
+  bundle: BundleSpec | null;
+  buildCommand?: string;
+  workingDirectory: string;
+  budgetsPath?: string;
+  failOnBudget: boolean;
 };
 
 export type GetInput = (name: string) => string;
@@ -20,6 +26,8 @@ export function readInputs(get: GetInput): Inputs {
   const urls = parseUrls(get("urls"));
   const revalidateUrl = optional(get("revalidate-url"));
   const revalidateSecret = optional(get("revalidate-secret"));
+  const buildCommand = optional(get("build-command"));
+  const budgetsPath = optional(get("budgets"));
   return {
     urls,
     runs: integer(get, "runs", 3, 1, 15),
@@ -32,6 +40,11 @@ export function readInputs(get: GetInput): Inputs {
     storeCommitMessage: boolean(get, "store-commit-message", true),
     ...(revalidateUrl ? { revalidateUrl: httpUrl(revalidateUrl, "revalidate-url") } : {}),
     ...(revalidateSecret ? { revalidateSecret } : {}),
+    bundle: bundleSpec(get("bundle")),
+    ...(buildCommand ? { buildCommand } : {}),
+    workingDirectory: optional(get("working-directory")) ?? ".",
+    ...(budgetsPath ? { budgetsPath } : {}),
+    failOnBudget: boolean(get, "fail-on-budget", true),
   };
 }
 
@@ -104,4 +117,12 @@ function required(get: GetInput, name: string): string {
 
 function optional(value: string): string | undefined {
   return value.trim() || undefined;
+}
+
+function bundleSpec(value: string): BundleSpec | null {
+  try {
+    return parseBundleSpec(value);
+  } catch (error) {
+    throw new Error(`Input ${error instanceof Error ? error.message : String(error)}`);
+  }
 }

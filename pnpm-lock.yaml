@@ -215,6 +215,12 @@ importers:
       '@actions/github':
         specifier: ^9.1.1
         version: 9.1.1
+      '@perf-trail/badge':
+        specifier: workspace:*
+        version: link:../badge
+      '@perf-trail/bundle':
+        specifier: workspace:*
+        version: link:../bundle
       '@perf-trail/core':
         specifier: workspace:*
         version: link:../core

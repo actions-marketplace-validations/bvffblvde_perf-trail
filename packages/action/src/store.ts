@@ -11,9 +11,15 @@ export type SaveResult = { history: History; previous: Entry | undefined };
 
 export async function saveEntry(
   api: GitHubApi,
-  options: { branch: string; entry: Entry; maxEntries: number; attempts?: number },
+  options: {
+    branch: string;
+    entry: Entry;
+    maxEntries: number;
+    files?: Record<string, string>;
+    attempts?: number;
+  },
 ): Promise<SaveResult> {
-  const { branch, entry, maxEntries, attempts = 3 } = options;
+  const { branch, entry, maxEntries, files: extraFiles = {}, attempts = 3 } = options;
   for (let attempt = 1; attempt <= attempts; attempt++) {
     const head = await api.getBranchHead(branch);
     const current = head ? await readHistory(api, head, branch) : [];
@@ -24,6 +30,7 @@ export async function saveEntry(
     const history = appendEntry(current, entry, maxEntries);
     const files: Record<string, string> = {
       ...(head ? {} : DATA_BRANCH_FILES),
+      ...extraFiles,
       [HISTORY_FILE]: `${JSON.stringify(history)}\n`,
     };
     const result = await api.commitFiles({

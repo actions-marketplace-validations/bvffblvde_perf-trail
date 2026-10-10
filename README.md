@@ -2,7 +2,7 @@
 
 Performance history for every deploy. A GitHub Action audits your production site with Lighthouse after each deploy and appends the result to a JSON file in a git branch. No server, no database, no paid service.
 
-Status: early development (phase 1 of 4). The action and the history format work; bundle sizes, budgets, charts and badges are coming next.
+Status: early development (phase 2 of 4). Lighthouse, bundle sizes, budgets, job summary and badges work; React charts and npm packages are coming next.
 
 ## Usage
 
@@ -25,6 +25,50 @@ jobs:
 
 On `deployment_status` only successful deployments whose environment starts with `Production` are measured; every other status is skipped with a log line. `push` and `workflow_dispatch` always measure the current commit.
 
+## Bundle size and budgets
+
+To record gzip JS per route, check out the deployed commit, install dependencies and let the action build:
+
+```yaml
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.deployment.sha || github.sha }}
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      - run: npm ci
+      - uses: bvffblvde/perf-trail@main
+        with:
+          urls: https://example.com/
+          build-command: npm run build
+          bundle: next
+          budgets: perf-trail.budgets.json
+```
+
+`bundle` supports `next` (App Router, Turbopack and webpack), `vite` (needs `build.manifest: true`) and `glob:<pattern>`. Without `ref` the checkout is the default branch, not the deployed commit; the action warns when they differ.
+
+`perf-trail.budgets.json` sets minimum scores, maximum metrics and maximum JS per route. Pages and routes can override the defaults. A broken budget fails the job after the entry is saved, unless `fail-on-budget: false`.
+
+```json
+{
+  "$schema": "https://raw.githubusercontent.com/bvffblvde/perf-trail/main/packages/core/schema/budgets.v1.json",
+  "scores": { "performance": 95, "accessibility": 100 },
+  "metrics": { "lcp": 2500, "cls": 0.05, "tbt": 200 },
+  "pages": { "/en/cv": { "metrics": { "lcp": 2000 } } },
+  "bundle": { "maxKiB": 160, "routes": { "/[locale]/admin": 300 } }
+}
+```
+
+Every run writes a table with deltas to the job summary.
+
+## Badges
+
+Each run writes SVG badges to `badges/` in the data branch: `performance.svg` and `lcp.svg` for the first URL, `js.svg` for the largest route, and `pages/<page>/` for every page. Desktop runs use `badges/desktop/`.
+
+```markdown
+![Lighthouse](https://raw.githubusercontent.com/OWNER/REPO/perf-data/badges/performance.svg)
+```
+
 ## Inputs
 
 | Input | Default | Notes |
@@ -39,11 +83,18 @@ On `deployment_status` only successful deployments whose environment starts with
 | `store-commit-message` | `true` | store the first line of the commit message |
 | `revalidate-url` | none | POST after the history is saved |
 | `revalidate-secret` | none | sent as `Authorization: Bearer <secret>` |
+| `bundle` | `off` | `next`, `vite`, `glob:<pattern>` or `off` |
+| `build-command` | none | shell command run in `working-directory` before measuring the bundle |
+| `working-directory` | `.` | where the app is built |
+| `budgets` | none | path to `perf-trail.budgets.json` |
+| `fail-on-budget` | `true` | fail the job on a broken budget, the entry is saved first |
 | `github-token` | `github.token` | needs `contents: write` |
 
 ## History format
 
 `history.json` is an array of entries, oldest first. Times are in milliseconds, CLS is unitless, scores are 0 to 100, bundle sizes are gzip bytes. The JSON Schema is in [packages/core/schema/history.v1.json](packages/core/schema/history.v1.json).
+
+Outputs: `skipped`, `entry-json`, `budget-passed`, `summary-markdown`.
 
 ```json
 {
