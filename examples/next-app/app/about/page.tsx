@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Counter } from "./counter";
 
 export const metadata: Metadata = {
   title: "About",
@@ -13,6 +14,7 @@ export default function About() {
         perf-trail runs Lighthouse several times per page, keeps the median run and appends it to a
         history file in a git branch. No server and no database.
       </p>
+      <Counter />
     </>
   );
 }
