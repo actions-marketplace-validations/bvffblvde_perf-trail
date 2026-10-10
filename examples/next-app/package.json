@@ -9,6 +9,10 @@
     "typecheck": "next typegen && tsc --noEmit"
   },
   "dependencies": {
+    "@perf-trail/badge": "workspace:*",
+    "@perf-trail/client": "workspace:*",
+    "@perf-trail/core": "workspace:*",
+    "@perf-trail/react": "workspace:*",
     "next": "^16.4.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"

@@ -181,6 +181,18 @@ importers:
 
   examples/next-app:
     dependencies:
+      '@perf-trail/badge':
+        specifier: workspace:*
+        version: link:../../packages/badge
+      '@perf-trail/client':
+        specifier: workspace:*
+        version: link:../../packages/client
+      '@perf-trail/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@perf-trail/react':
+        specifier: workspace:*
+        version: link:../../packages/react
       next:
         specifier: ^16.4.0
         version: 16.4.0(@types/node@24.19.1)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)

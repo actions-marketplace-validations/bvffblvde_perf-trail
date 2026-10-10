@@ -2,7 +2,7 @@
 
 Performance history for every deploy. A GitHub Action audits your production site with Lighthouse after each deploy and appends the result to a JSON file in a git branch. No server, no database, no paid service.
 
-Status: early development (phase 2 of 4). Lighthouse, bundle sizes, budgets, job summary and badges work; React charts and npm packages are coming next.
+Status: early development (phase 3 of 4). The action, the history format, the client and the React components work; npm packages and the Marketplace listing are next. Live demo and docs: https://perf-trail.vercel.app
 
 ## Usage
 
@@ -68,6 +68,26 @@ Each run writes SVG badges to `badges/` in the data branch: `performance.svg` an
 ```markdown
 ![Lighthouse](https://raw.githubusercontent.com/OWNER/REPO/perf-data/badges/performance.svg)
 ```
+
+## Render the history
+
+```tsx
+import { fetchHistory } from "@perf-trail/client";
+import { LatestDeployCard, PerfHistoryChart } from "@perf-trail/react";
+import "@perf-trail/react/styles.css";
+
+export default async function Perf() {
+  const history = await fetchHistory({ repo: "you/your-site" });
+  return (
+    <>
+      <LatestDeployCard history={history} repo="you/your-site" />
+      <PerfHistoryChart history={history} metric="lcp" page="/" budget={2500} />
+    </>
+  );
+}
+```
+
+The components render pure SVG on the server with no client JavaScript, take `role="img"` with a text summary, and follow your page `color-scheme`.
 
 ## Inputs
 

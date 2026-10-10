@@ -33,8 +33,10 @@ jobs:
         with:
           urls: |
             ${{ vars.EXAMPLE_SITE_URL }}/
-            ${{ vars.EXAMPLE_SITE_URL }}/about
+            ${{ vars.EXAMPLE_SITE_URL }}/docs
           working-directory: examples/next-app
           build-command: pnpm build
           bundle: next
           budgets: examples/next-app/perf-trail.budgets.json
+          revalidate-url: ${{ vars.EXAMPLE_SITE_URL }}/api/revalidate
+          revalidate-secret: ${{ secrets.REVALIDATE_SECRET }}
