@@ -1,15 +1,32 @@
+import { codeToHtml, createCssVariablesTheme } from "shiki";
 import { CopyButton } from "./copy-button";
 
-export function Code({ code, label, language }: { code: string; label: string; language: string }) {
+const theme = createCssVariablesTheme({
+  name: "perf-trail",
+  variablePrefix: "--shiki-",
+  fontStyle: true,
+});
+
+export async function Code({
+  code,
+  label,
+  language,
+}: {
+  code: string;
+  label: string;
+  language: "yaml" | "tsx" | "ts" | "json" | "markdown" | "sh";
+}) {
+  const html = await codeToHtml(code, {
+    lang: language === "sh" ? "shellscript" : language,
+    theme,
+  });
   return (
     <div className="code">
       <div className="code-bar">
-        <span>{label}</span>
+        <span className="code-file">{label}</span>
         <CopyButton text={code} label={label} />
       </div>
-      <pre data-language={language}>
-        <code>{code}</code>
-      </pre>
+      <div className="code-body" dangerouslySetInnerHTML={{ __html: html }} />
     </div>
   );
 }

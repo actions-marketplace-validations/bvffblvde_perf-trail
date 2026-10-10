@@ -35,6 +35,16 @@
           }
         }
       }
+    },
+    {
+      "includes": ["examples/next-app/app/_components/code.tsx"],
+      "linter": {
+        "rules": {
+          "security": {
+            "noDangerouslySetInnerHtml": "off"
+          }
+        }
+      }
     }
   ]
 }
