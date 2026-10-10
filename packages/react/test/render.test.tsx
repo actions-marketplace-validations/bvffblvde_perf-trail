@@ -209,3 +209,39 @@ describe("scale details", () => {
     expect(out).not.toContain("+0 s");
   });
 });
+
+describe("compact rendering", () => {
+  it("draws only the line, the budget line and points in the minimal variant", () => {
+    const history = series(5, (i) => (i === 2 ? 3100 : 1800));
+    const out = html(
+      <PerfHistoryChart history={history} metric="lcp" page="/" budget={2500} variant="minimal" />,
+    );
+    expect(out).toContain('class="pt-chart pt-minimal"');
+    expect(out).not.toContain("pt-area");
+    expect(out).not.toContain("pt-breach");
+    expect(out).not.toMatch(/<text/);
+    expect(out).toContain('class="pt-budget"');
+    expect(out.match(/<circle/g)).toHaveLength(5);
+  });
+
+  it("keeps the full variant from growing past its size", () => {
+    const out = html(<PerfHistoryChart history={series(2, () => 1400)} metric="lcp" width={480} />);
+    expect(out).toContain('style="max-width:480px"');
+  });
+
+  it("supports a title, a custom meta line and hiding the budget line", () => {
+    const history = [entry(0, 1400, { budgets: { passed: false, failures: ["x"] } })];
+    const out = html(
+      <LatestDeployCard
+        history={history}
+        title="Latest deploy"
+        meta="Measured today"
+        showBudgets={false}
+      />,
+    );
+    expect(out).toContain('<h3 class="pt-card-title">Latest deploy</h3>');
+    expect(out).toContain('<p class="pt-meta">Measured today</p>');
+    expect(out).not.toContain("pt-budgets");
+    expect(out).not.toContain("pt-commit");
+  });
+});

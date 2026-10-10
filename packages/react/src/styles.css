@@ -326,3 +326,27 @@
 .pt-tip p:first-child {
   color: var(--pt-muted);
 }
+
+.pt-card-title {
+  margin: 0;
+  font-size: 1em;
+  font-weight: 600;
+}
+
+.pt-meta {
+  margin: 0 0 0 auto;
+  color: var(--pt-muted);
+  font-size: 0.8125em;
+}
+
+.pt-pages {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  gap: 0.75rem 1.5rem;
+}
+
+.pt-minimal .pt-point,
+.pt-minimal .pt-last {
+  fill: Canvas;
+  stroke: var(--pt-line);
+}

@@ -23,6 +23,9 @@ export type LatestDeployCardProps = {
   preset?: Preset;
   repo?: string;
   labels?: LabelsInput;
+  title?: string;
+  meta?: string;
+  showBudgets?: boolean;
   className?: string;
 };
 
@@ -37,6 +40,9 @@ export function LatestDeployCard({
   preset = "mobile",
   repo,
   labels: labelsInput,
+  title,
+  meta,
+  showBudgets = true,
   className,
 }: LatestDeployCardProps) {
   const labels = resolveLabels(labelsInput);
@@ -63,36 +69,45 @@ export function LatestDeployCard({
   return (
     <section className={classes} aria-label={labels.latestDeploy(key)}>
       <header className="pt-card-head">
-        <Commit entry={current} repo={repo} />
-        <time dateTime={current.date}>{formatDate(current.date, labels.locale)}</time>
+        {title ? <h3 className="pt-card-title">{title}</h3> : null}
+        {meta ? (
+          <p className="pt-meta">{meta}</p>
+        ) : (
+          <>
+            <Commit entry={current} repo={repo} />
+            <time dateTime={current.date}>{formatDate(current.date, labels.locale)}</time>
+          </>
+        )}
         {current.message ? <p className="pt-message">{current.message}</p> : null}
       </header>
-      {scorePages.map((p) => {
-        const scores = current.pages[p]?.scores;
-        const scoresBefore = previous?.pages[p]?.scores;
-        if (!scores) return null;
-        return (
-          <div key={p} className="pt-page">
-            {scorePages.length > 1 ? <p className="pt-page-name">{p}</p> : null}
-            <dl className="pt-scores">
-              {scoreKeys.map((k) => (
-                <div key={k} className={`pt-score pt-${rateScore(scores[k])}`}>
-                  <dt>{labels.metrics[k]}</dt>
-                  <dd>
-                    {scores[k]}
-                    <Delta
-                      value={scoresBefore ? scores[k] - scoresBefore[k] : undefined}
-                      better="up"
-                      format={String}
-                      labels={labels}
-                    />
-                  </dd>
-                </div>
-              ))}
-            </dl>
-          </div>
-        );
-      })}
+      <div className="pt-pages">
+        {scorePages.map((p) => {
+          const scores = current.pages[p]?.scores;
+          const scoresBefore = previous?.pages[p]?.scores;
+          if (!scores) return null;
+          return (
+            <div key={p} className="pt-page">
+              {scorePages.length > 1 ? <p className="pt-page-name">{p}</p> : null}
+              <dl className="pt-scores">
+                {scoreKeys.map((k) => (
+                  <div key={k} className={`pt-score pt-${rateScore(scores[k])}`}>
+                    <dt>{labels.metrics[k]}</dt>
+                    <dd>
+                      {scores[k]}
+                      <Delta
+                        value={scoresBefore ? scores[k] - scoresBefore[k] : undefined}
+                        better="up"
+                        format={String}
+                        labels={labels}
+                      />
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          );
+        })}
+      </div>
       {result ? (
         <dl className="pt-metrics">
           {CARD_METRICS.map((k) => (
@@ -135,7 +150,7 @@ export function LatestDeployCard({
       ) : (
         <p className="pt-empty">{labels.pageNotMeasured(key)}</p>
       )}
-      {current.budgets ? (
+      {showBudgets && current.budgets ? (
         <p className={current.budgets.passed ? "pt-budgets pt-good" : "pt-budgets pt-poor"}>
           {current.budgets.passed
             ? labels.budgetsPassed

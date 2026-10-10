@@ -24,12 +24,18 @@ export type PerfHistoryChartProps = {
   height?: number;
   showCaption?: boolean;
   interactive?: boolean;
+  variant?: "full" | "minimal";
   labels?: LabelsInput;
   className?: string;
   id?: string;
 };
 
-const MARGIN = { top: 16, right: 16, bottom: 30, left: 52 };
+const MARGINS = {
+  full: { top: 16, right: 16, bottom: 30, left: 52 },
+  minimal: { top: 10, right: 10, bottom: 10, left: 10 },
+};
+
+type Margin = (typeof MARGINS)["full"];
 const MAX_MARKERS = 60;
 
 type Geometry = {
@@ -51,6 +57,7 @@ export function PerfHistoryChart({
   height = 240,
   showCaption = true,
   interactive = false,
+  variant = "full",
   labels: labelsInput,
   className,
   id: idProp,
@@ -66,12 +73,20 @@ export function PerfHistoryChart({
   const heading = title ?? labels.chartTitle(labels.metrics[metric], subject);
   const id = idProp ?? `pt-${metric}-${slug(subject ?? "all")}-${preset}`;
   const summary = describe(metric, points, budget, labels);
-  const classes = ["pt-chart", className].filter(Boolean).join(" ");
+  const classes = ["pt-chart", variant === "minimal" ? "pt-minimal" : undefined, className]
+    .filter(Boolean)
+    .join(" ");
+  const margin = MARGINS[variant];
   const geometry =
-    points.length > 0 ? geometryFor(points, metric, budget, width, height) : undefined;
+    points.length > 0 ? geometryFor(points, metric, budget, width, height, margin) : undefined;
 
   const svg = (
-    <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-labelledby={`${id}-title ${id}-desc`}>
+    <svg
+      viewBox={`0 0 ${width} ${height}`}
+      role="img"
+      aria-labelledby={`${id}-title ${id}-desc`}
+      style={variant === "full" ? { maxWidth: width } : undefined}
+    >
       <title id={`${id}-title`}>{heading}</title>
       <desc id={`${id}-desc`}>{summary}</desc>
       {geometry ? (
@@ -84,6 +99,8 @@ export function PerfHistoryChart({
           geometry={geometry}
           labels={labels}
           markers={!interactive}
+          minimal={variant === "minimal"}
+          margin={margin}
         />
       ) : (
         <text className="pt-empty" x={width / 2} y={height / 2} textAnchor="middle">
@@ -118,22 +135,23 @@ function geometryFor(
   budget: number | undefined,
   width: number,
   height: number,
+  margin: Margin,
 ): Geometry {
   const [low, high] = domainFor(
     metric,
     points.map((p) => p.value),
     budget,
   );
-  const plotWidth = width - MARGIN.left - MARGIN.right;
-  const plotHeight = height - MARGIN.top - MARGIN.bottom;
+  const plotWidth = width - margin.left - margin.right;
+  const plotHeight = height - margin.top - margin.bottom;
   return {
     low,
     high,
     x: (i) =>
       round(
-        MARGIN.left + (points.length === 1 ? plotWidth / 2 : (i / (points.length - 1)) * plotWidth),
+        margin.left + (points.length === 1 ? plotWidth / 2 : (i / (points.length - 1)) * plotWidth),
       ),
-    y: (value) => round(MARGIN.top + (1 - (value - low) / (high - low || 1)) * plotHeight),
+    y: (value) => round(margin.top + (1 - (value - low) / (high - low || 1)) * plotHeight),
   };
 }
 
@@ -169,6 +187,8 @@ function Plot({
   geometry: { x, y, low, high },
   labels,
   markers,
+  minimal,
+  margin,
 }: {
   points: Point[];
   metric: ChartMetric;
@@ -178,22 +198,25 @@ function Plot({
   geometry: Geometry;
   labels: PerfLabels;
   markers: boolean;
+  minimal: boolean;
+  margin: Margin;
 }) {
-  const ticks = ticksFor(metric, low, high);
+  const ticks = minimal ? [] : ticksFor(metric, low, high);
   const line = points.map((p, i) => `${i === 0 ? "M" : "L"}${x(i)} ${y(p.value)}`).join("");
   const baseline = y(low);
   const area = `${line}L${x(points.length - 1)} ${baseline}L${x(0)} ${baseline}Z`;
   const showAll = points.length <= MAX_MARKERS;
   const last = points.length - 1;
-  const xLabels = points.length === 1 ? [0] : [0, last];
+  const xLabels = minimal ? [] : points.length === 1 ? [0] : [0, last];
+  const budgetVisible = budget !== undefined && budget >= low && budget <= high;
 
   return (
     <>
       <g className="pt-grid">
         {ticks.map((tick) => (
           <g key={tick}>
-            <line x1={MARGIN.left} x2={width - MARGIN.right} y1={y(tick)} y2={y(tick)} />
-            <text x={MARGIN.left - 8} y={y(tick)} dy="0.32em" textAnchor="end">
+            <line x1={margin.left} x2={width - margin.right} y1={y(tick)} y2={y(tick)} />
+            <text x={margin.left - 8} y={y(tick)} dy="0.32em" textAnchor="end">
               {formatValue(metric, tick)}
             </text>
           </g>
@@ -211,20 +234,23 @@ function Plot({
           </text>
         ))}
       </g>
-      {budget !== undefined && budget >= low && budget <= high ? (
+      {budgetVisible ? (
         <g className="pt-budget">
-          <line x1={MARGIN.left} x2={width - MARGIN.right} y1={y(budget)} y2={y(budget)} />
-          <text x={width - MARGIN.right} y={y(budget) - 6} textAnchor="end">
-            {labels.budgetLine(formatValue(metric, budget))}
-          </text>
+          <line x1={margin.left} x2={width - margin.right} y1={y(budget)} y2={y(budget)} />
+          {minimal ? null : (
+            <text x={width - margin.right} y={y(budget) - 6} textAnchor="end">
+              {labels.budgetLine(formatValue(metric, budget))}
+            </text>
+          )}
         </g>
       ) : null}
-      {points.length > 1 ? <path className="pt-area" d={area} /> : null}
+      {points.length > 1 && !minimal ? <path className="pt-area" d={area} /> : null}
       <path className="pt-line" d={line} />
       <g className="pt-points">
         {points.map((point, i) => {
-          const breach = breaches(metric, point.value, budget);
+          const breach = !minimal && breaches(metric, point.value, budget);
           if (!breach && i !== last && (!markers || !showAll)) return null;
+          if (!markers && minimal) return null;
           return (
             <circle
               key={point.entry.sha}
@@ -233,7 +259,7 @@ function Plot({
               }
               cx={x(i)}
               cy={y(point.value)}
-              r={i === last ? 4.5 : 3}
+              r={i === last && !minimal ? 4.5 : 3}
             >
               {markers ? (
                 <title>
