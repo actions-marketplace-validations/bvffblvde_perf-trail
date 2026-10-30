@@ -355,13 +355,15 @@ export default async function Home() {
               {comparison.map((tool) => (
                 <tr key={tool.name} className={tool.name === "perf-trail" ? "us" : undefined}>
                   <th scope="row">{tool.name}</th>
-                  <td className={tool.lighthouse ? "yes" : "no"}>
+                  <td data-label="Lighthouse" className={tool.lighthouse ? "yes" : "no"}>
                     {tool.lighthouse ? "Yes" : "No"}
                   </td>
-                  <td className={tool.bundle ? "yes" : "no"}>{tool.bundle ? "Yes" : "No"}</td>
-                  <td>{tool.history}</td>
-                  <td>{tool.ui}</td>
-                  <td>{tool.infra}</td>
+                  <td data-label="Bundle size" className={tool.bundle ? "yes" : "no"}>
+                    {tool.bundle ? "Yes" : "No"}
+                  </td>
+                  <td data-label="History lives in">{tool.history}</td>
+                  <td data-label="What you see">{tool.ui}</td>
+                  <td data-label="Infrastructure">{tool.infra}</td>
                 </tr>
               ))}
             </tbody>
