@@ -1115,6 +1115,49 @@ article.docs .table td {
   .footer-brand {
     grid-column: 1 / -1;
   }
+
+  .compare thead {
+    display: none;
+  }
+
+  .compare table,
+  .compare tbody,
+  .compare tr {
+    display: block;
+  }
+
+  .compare tr {
+    padding: 1rem;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .compare tbody tr:last-child {
+    border-bottom: 0;
+  }
+
+  .compare table th {
+    display: block;
+    padding: 0 0 0.5rem;
+    border-bottom: 0;
+    font-size: 1.05rem;
+    white-space: normal;
+  }
+
+  .compare table td {
+    display: grid;
+    grid-template-columns: 7.5rem minmax(0, 1fr);
+    gap: 0.75rem;
+    padding: 0.3rem 0;
+    border-bottom: 0;
+  }
+
+  .compare td::before {
+    content: attr(data-label);
+    color: var(--ink-soft);
+    font-size: 0.875rem;
+    font-weight: 400;
+    line-height: 1.7;
+  }
 }
 
 @media (max-width: 36rem) {
